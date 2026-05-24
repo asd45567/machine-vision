@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>機器視覺簡介 - 機器視覺檢測</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #202020;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .nav-links a.active {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.15);
+            font-weight: 600;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .page-header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .content-container {
+            max-width: 1200px;
+            margin: -3rem auto 3rem;
+            padding: 0 2rem;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #202020;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .subsection-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .content-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-bottom: 1rem;
+        }
+
+        .content-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .content-list li {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-bottom: 0.75rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .content-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0.5rem;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .image-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 2rem 0;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .function-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .function-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .function-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .function-card p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .tech-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .tech-item {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: background 0.3s;
+        }
+
+        .tech-item:hover {
+            background: #edf2f7;
+        }
+
+        .tech-item strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin: 2rem 0;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .pdf-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .pdf-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #667eea;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s, transform 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .pdf-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .pdf-icon {
+            font-size: 1.5rem;
+        }
+
+        .footer {
+            background: rgba(32, 32, 32, 0.95);
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer-content p {
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .kuse-branding {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .kuse-branding:hover {
+            color: #667eea;
+        }
+
+        .kuse-branding svg {
+            height: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .content-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .function-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tech-list {
+                grid-template-columns: 1fr;
+            }
+
+            .pdf-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">機器視覺檢測</a>
+            <ul class="nav-links">
+                <li><a href="index.html">首頁</a></li>
+                <li><a href="intro.html" class="active">機器視覺簡介</a></li>
+                <li><a href="imaging.html">取像模組</a></li>
+                <li><a href="lighting.html">光源照明</a></li>
+                <li><a href="processing.html">影像處理</a></li>
+                <li><a href="application.html">檢測應用</a></li>
+                <li><a href="project.html">專題報告</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <h1><span>🔍</span> 機器視覺簡介</h1>
+        <p>Introduction to Machine Vision</p>
+    </div>
+
+    <div class="content-container">
+        <div class="content-card">
+            <h2 class="section-title">什麼是機器視覺檢測？</h2>
+            <div class="image-card">
+                <img src="圖片/機器視覺檢測系統.png">
+            </div>
+            <p class="content-text">
+                <strong>AOI (Automated Optical Inspection)</strong> 自動化光學檢測是利用機器視覺技術進行產品品質檢測的先進技術。透過光學系統擷取產品影像，並運用影像處理與人工智慧演算法，自動判斷產品是否符合品質標準。
+            </p>
+            <p class="content-text">
+                機器視覺檢測能夠取代傳統的人工目視檢查，大幅提高檢測效率與準確性。相較於人工檢測，機器視覺系統具有以下優勢：
+            </p>
+            <ul class="content-list">
+                <li>24小時不間斷運作，不受疲勞影響</li>
+                <li>檢測速度快，可達每秒數百件</li>
+                <li>檢測標準一致，減少人為誤判</li>
+                <li>可檢測微小缺陷，精度達微米等級</li>
+                <li>完整記錄檢測數據，便於追溯分析</li>
+            </ul>
+            <div class="image-card">
+                <img src="https://api.kuse.ai/api/folder/v1/file/4e753c24b9254b272a93e7ee2d1548b6e81cc661556ce8b28a4ee6e362938428_2800342.jpeg" alt="機器視覺檢測系統示意圖">
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="section-title">機器視覺的相關領域</h2>
+            <p class="content-text">
+                機器視覺是一門跨領域的整合技術，涵蓋多個專業領域的知識與應用：
+            </p>
+            <ul class="content-list">
+                <li><strong>光學 (Optics)</strong> - 光源設計、鏡頭選擇、成像原理，確保獲得高品質的影像</li>
+                <li><strong>影像處理 (Image Processing)</strong> - 影像濾波、影像增強、影像分割，提升影像品質與特徵萃取</li>
+                <li><strong>電腦視覺 (Computer Vision)</strong> - 特徵提取、物體識別、場景理解，實現智能化的視覺分析</li>
+                <li><strong>機器學習 (Machine Learning)</strong> - 深度學習、分類演算法、缺陷預測，提升檢測的智能化程度</li>
+            </ul>
+            <div class="image-card">
+                <img src="https://api.kuse.ai/api/folder/v1/file/e5e4d6a72864e6473ace921e0993af93bb9bb82a3be02013489c70de2430aa2c_2800357.jpeg" alt="機器視覺相關領域示意圖">
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="section-title">六大核心功能</h2>
+            <p class="content-text">
+                機器視覺系統具備多種核心功能，可應用於不同的檢測需求：
+            </p>
+            <div class="function-grid">
+                <div class="function-card">
+                    <h3>定位 (Location)</h3>
+                    <p>確定物件在空間中的位置與方向，提供精確的座標資訊</p>
+                </div>
+                <div class="function-card">
+                    <h3>識別 (Identification)</h3>
+                    <p>讀取條碼、二維碼、字符等資訊，實現產品追溯與管理</p>
+                </div>
+                <div class="function-card">
+                    <h3>辨識 (Recognition)</h3>
+                    <p>識別物件的形狀、顏色、紋理等特徵，進行分類與判別</p>
+                </div>
+                <div class="function-card">
+                    <h3>瑕疵檢測 (Defect Detection)</h3>
+                    <p>檢測表面缺陷、異物、劃痕等品質問題</p>
+                </div>
+                <div class="function-card">
+                    <h3>驗證 (Verification)</h3>
+                    <p>確認組裝是否正確、零件是否完整，確保產品品質</p>
+                </div>
+                <div class="function-card">
+                    <h3>量測 (Measurement)</h3>
+                    <p>精確測量尺寸、距離、角度等幾何參數</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="section-title">AOI系統的關鍵技術</h2>
+            <p class="content-text">
+                建構一套完整的AOI系統需要整合多項關鍵技術：
+            </p>
+            <div class="tech-list">
+                <div class="tech-item">
+                    <strong>光學設計</strong> - 照明系統與光源配置，確保影像品質
+                </div>
+                <div class="tech-item">
+                    <strong>機台設計</strong> - 機械結構與穩定性，提供精密的運動平台
+                </div>
+                <div class="tech-item">
+                    <strong>運動控制</strong> - 精密定位與移動控制，實現高速檢測
+                </div>
+                <div class="tech-item">
+                    <strong>系統整合</strong> - 軟硬體協同運作，確保系統穩定性
+                </div>
+                <div class="tech-item">
+                    <strong>影像處理</strong> - 影像增強與分析，提升檢測效果
+                </div>
+                <div class="tech-item">
+                    <strong>特徵擷取</strong> - 關鍵特徵識別，實現精準判斷
+                </div>
+                <div class="tech-item">
+                    <strong>尺寸量測</strong> - 精確度量與校正，確保測量精度
+                </div>
+                <div class="tech-item">
+                    <strong>瑕疵檢測</strong> - 缺陷判定演算法，提高檢測準確率
+                </div>
+            </div>
+            <div class="image-card">
+                <img src="https://api.kuse.ai/api/folder/v1/file/ded5ab0c1791806a3fbd44abb0131509e42d130cd257a551867af103785af604_2800415.jpeg" alt="AOI系統關鍵技術示意圖">
+            </div>
+        </div>
+
+        
+        <div class="content-card">
+            <h2 class="section-title">相關PDF講義</h2>
+            <p class="content-text">
+                下載詳細的課程講義，深入學習機器視覺檢測技術：
+            </p>
+            <div class="pdf-buttons">
+                <a href="課程簡報&心智圖/機器視覺檢測簡介.pdf" target="_blank" class="pdf-button">
+                    <span class="pdf-icon">📄</span>
+                    <span>機器視覺檢測簡介.pdf</span>
+                </a>
+                <a href="課程簡報&心智圖/取像參數的選用KM.pdf" target="_blank" class="pdf-button">
+                    <span class="pdf-icon">📄</span>
+                    <span>取像參數的選用KM.pdf</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>機器視覺檢測課程</p>
+            <p> 2026 Machine Vision Inspection Course
+            </a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+</body>
+</html>

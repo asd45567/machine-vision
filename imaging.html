@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>取像模組 - 機器視覺檢測</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .navbar {
+            background: rgba(15, 32, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #e5e7eb;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .nav-links a.active {
+            color: #60a5fa;
+            background: rgba(96, 165, 250, 0.2);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem 2rem 2rem;
+            text-align: center;
+            background: linear-gradient(rgba(15, 32, 39, 0.8), rgba(15, 32, 39, 0.8)), url('https://api.kuse.ai/api/folder/v1/file/49443986d1c12d7aff457b397c22c9c28deda32c711021cf617f8526b8fad208_6827123.jpeg');
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            margin-top: 2rem;
+        }
+
+        .hero-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #9ca3af;
+            font-weight: 300;
+        }
+
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-content {
+            color: #e5e7eb;
+            line-height: 1.8;
+        }
+
+        .subsection {
+            margin-bottom: 2rem;
+        }
+
+        .subsection-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #93c5fd;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .content-list li {
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .content-list li::before {
+            content: '▹';
+            position: absolute;
+            left: 0;
+            color: #60a5fa;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .content-list li strong {
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .image-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(96, 165, 250, 0.2);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+
+        .module-explorer {
+            display: grid;
+            grid-template-columns: minmax(320px, 1.2fr) minmax(280px, 0.9fr);
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .module-stage {
+            position: relative;
+            min-height: 520px;
+            border-radius: 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.25), transparent 28%),
+                radial-gradient(circle at 80% 30%, rgba(167, 139, 250, 0.18), transparent 22%),
+                linear-gradient(135deg, rgba(10, 25, 35, 0.92), rgba(17, 35, 51, 0.88));
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: inset 0 0 40px rgba(15, 23, 42, 0.45);
+        }
+
+        .module-stage::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .scan-beam {
+            position: absolute;
+            inset: 14% auto 14% 18%;
+            width: 16px;
+            background: linear-gradient(180deg, rgba(96, 165, 250, 0), rgba(96, 165, 250, 0.9), rgba(96, 165, 250, 0));
+            filter: blur(2px);
+            opacity: 0.75;
+            animation: scanBeam 4.8s ease-in-out infinite;
+        }
+
+        @keyframes scanBeam {
+            0%, 100% { transform: translateX(0); opacity: 0.45; }
+            50% { transform: translateX(250px); opacity: 0.9; }
+        }
+
+        .module-part {
+            position: absolute;
+            border: 1px solid rgba(191, 219, 254, 0.28);
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.18), rgba(15, 23, 42, 0.75));
+            box-shadow: 0 12px 28px rgba(2, 6, 23, 0.35);
+        }
+
+        .module-part.lens { left: 7%; top: 39%; width: 15%; height: 22%; border-radius: 42px; }
+        .module-part.mount { left: 19%; top: 35%; width: 8%; height: 30%; border-radius: 20px; }
+        .module-part.aperture { left: 24%; top: 43%; width: 8%; height: 14%; border-radius: 999px; }
+        .module-part.shutter { left: 33%; top: 33%; width: 9%; height: 34%; border-radius: 18px; }
+        .module-part.sensor { left: 48%; top: 36%; width: 12%; height: 28%; border-radius: 18px; background: linear-gradient(180deg, rgba(16, 185, 129, 0.28), rgba(15, 23, 42, 0.75)); }
+        .module-part.camera { left: 31%; top: 26%; width: 34%; height: 48%; border-radius: 26px; }
+        .module-part.base { left: 28%; bottom: 12%; width: 42%; height: 10%; border-radius: 18px; background: linear-gradient(180deg, rgba(148, 163, 184, 0.25), rgba(30, 41, 59, 0.85)); }
+        .module-part.object-distance { left: 74%; top: 20%; width: 10px; height: 58%; border-radius: 999px; background: linear-gradient(180deg, rgba(250, 204, 21, 0.15), rgba(250, 204, 21, 0.9), rgba(250, 204, 21, 0.15)); }
+        .module-part.focal-length { left: 12%; top: 23%; width: 40%; height: 10px; border-radius: 999px; background: linear-gradient(90deg, rgba(167, 139, 250, 0.15), rgba(167, 139, 250, 0.95), rgba(167, 139, 250, 0.15)); }
+
+        .module-hotspot {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.75);
+            background: rgba(59, 130, 246, 0.24);
+            color: #eff6ff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            animation: hotspotPulse 2.4s ease-in-out infinite;
+        }
+
+        .module-hotspot:hover,
+        .module-hotspot.active {
+            transform: scale(1.12);
+            background: rgba(96, 165, 250, 0.55);
+            box-shadow: 0 0 0 10px rgba(96, 165, 250, 0.12), 0 0 24px rgba(96, 165, 250, 0.35);
+        }
+
+        @keyframes hotspotPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.2); }
+            50% { box-shadow: 0 0 0 12px rgba(96, 165, 250, 0); }
+        }
+
+        .module-hotspot[data-part="鏡頭"] { left: 8%; top: 47%; }
+        .module-hotspot[data-part="鏡頭接口"] { left: 20%; top: 47%; }
+        .module-hotspot[data-part="光圈"] { left: 26%; top: 47%; }
+        .module-hotspot[data-part="快門"] { left: 35%; top: 47%; }
+        .module-hotspot[data-part="相機"] { left: 44%; top: 27%; }
+        .module-hotspot[data-part="感光元件"] { left: 52%; top: 46%; }
+        .module-hotspot[data-part="底座"] { left: 45%; top: 74%; }
+        .module-hotspot[data-part="焦距"] { left: 28%; top: 18%; }
+        .module-hotspot[data-part="物距"] { left: 73%; top: 40%; }
+
+        .module-labels {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .module-tag {
+            position: absolute;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            color: #dbeafe;
+            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .module-path {
+            position: absolute;
+            left: 62%;
+            top: 18%;
+            width: 24%;
+            height: 58%;
+            border-radius: 999px;
+            border: 1px dashed rgba(250, 204, 21, 0.35);
+            opacity: 0.75;
+        }
+
+        .module-target {
+            position: absolute;
+            right: 8%;
+            top: 34%;
+            width: 92px;
+            height: 92px;
+            border-radius: 20px;
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            background: linear-gradient(180deg, rgba(250, 204, 21, 0.2), rgba(120, 53, 15, 0.45));
+            display: grid;
+            place-items: center;
+            color: #fef3c7;
+            font-size: 0.85rem;
+        }
+
+        .module-info {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.88));
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 520px;
+        }
+
+        .module-info-badge {
+            display: inline-flex;
+            width: fit-content;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(96, 165, 250, 0.14);
+            color: #93c5fd;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+        }
+
+        .module-info h3 {
+            font-size: 1.75rem;
+            color: #eff6ff;
+        }
+
+        .module-info p {
+            color: #cbd5e1;
+            line-height: 1.8;
+        }
+
+        .module-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.9rem;
+        }
+
+        .module-meta-card {
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(51, 65, 85, 0.45);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .module-meta-card strong {
+            display: block;
+            margin-bottom: 0.35rem;
+            color: #93c5fd;
+        }
+
+        .module-tip {
+            margin-top: auto;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: rgba(96, 165, 250, 0.08);
+            border: 1px solid rgba(96, 165, 250, 0.15);
+            color: #dbeafe;
+        }
+
+        .video-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .pdf-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .pdf-card {
+            background: rgba(96, 165, 250, 0.1);
+            border: 2px solid rgba(96, 165, 250, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .pdf-card:hover {
+            background: rgba(96, 165, 250, 0.2);
+            border-color: rgba(96, 165, 250, 0.5);
+            transform: translateX(5px);
+        }
+
+        .pdf-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+        }
+
+        .pdf-title {
+            font-weight: 600;
+            color: #e5e7eb;
+            font-size: 1rem;
+        }
+
+        .footer {
+            background: rgba(15, 32, 39, 0.95);
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .kuse-branding {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            color: #9ca3af;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .kuse-branding:hover {
+            color: #60a5fa;
+        }
+
+        .kuse-branding svg {
+            height: 1.2em;
+            width: auto;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(15, 32, 39, 0.98);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pdf-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .module-explorer {
+                grid-template-columns: 1fr;
+            }
+
+            .module-stage,
+            .module-info {
+                min-height: 460px;
+            }
+
+            .module-meta-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span>🔍</span>
+                <span>機器視覺檢測</span>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">首頁</a></li>
+                <li><a href="intro.html">機器視覺簡介</a></li>
+                <li><a href="imaging.html" class="active">取像模組</a></li>
+                <li><a href="lighting.html">光源照明</a></li>
+                <li><a href="processing.html">影像處理</a></li>
+                <li><a href="application.html">檢測應用</a></li>
+                <li><a href="project.html">專題報告</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="hero-icon">📷</div>
+        <h1 class="hero-title">取像模組</h1>
+        <p class="hero-subtitle">Imaging Module</p>
+    </div>
+
+    <div class="content-container">
+        <div class="section reveal">
+            <h2 class="section-title">
+                <span>🧩</span>
+                <span>取像模組互動拆解圖</span>
+            </h2>
+            <div class="section-content">
+                <p class="mb-6">按一下模組上的發光節點，可查看該元件在 AOI 取像流程中的角色、調校重點與常見影響。</p>
+                <div class="module-explorer">
+                    <div class="module-stage" id="moduleStage">
+                        <div class="scan-beam"></div>
+                        <div class="module-part lens"></div>
+                        <div class="module-part mount"></div>
+                        <div class="module-part aperture"></div>
+                        <div class="module-part shutter"></div>
+                        <div class="module-part camera"></div>
+                        <div class="module-part sensor"></div>
+                        <div class="module-part base"></div>
+                        <div class="module-part object-distance"></div>
+                        <div class="module-part focal-length"></div>
+                        <div class="module-path"></div>
+                        <div class="module-target">待測物</div>
+                        <button class="module-hotspot active" data-part="鏡頭">01</button>
+                        <button class="module-hotspot" data-part="鏡頭接口">02</button>
+                        <button class="module-hotspot" data-part="光圈">03</button>
+                        <button class="module-hotspot" data-part="快門">04</button>
+                        <button class="module-hotspot" data-part="相機">05</button>
+                        <button class="module-hotspot" data-part="感光元件">06</button>
+                        <button class="module-hotspot" data-part="底座">07</button>
+                        <button class="module-hotspot" data-part="焦距">08</button>
+                        <button class="module-hotspot" data-part="物距">09</button>
+                        <div class="module-labels">
+                            <div class="module-tag" style="left: 6%; top: 33%;">鏡頭群</div>
+                            <div class="module-tag" style="left: 32%; top: 24%;">相機本體</div>
+                            <div class="module-tag" style="left: 45%; top: 71%;">底座 / 固定座</div>
+                            <div class="module-tag" style="right: 6%; top: 28%;">物距方向</div>
+                            <div class="module-tag" style="left: 24%; top: 11%;">焦距軸線</div>
+                        </div>
+                    </div>
+                    <div class="module-info" id="moduleInfoPanel">
+                        <span class="module-info-badge">ACTIVE MODULE</span>
+                        <h3 id="moduleTitle">鏡頭</h3>
+                        <p id="moduleDescription">鏡頭負責把待測物反射或穿透的光線整形成可用影像，是 AOI 決定解析度、畸變與視野大小的第一站。</p>
+                        <div class="module-meta-grid">
+                            <div class="module-meta-card">
+                                <strong>主要功能</strong>
+                                <span id="moduleRole">決定視野、放大倍率與影像邊緣品質。</span>
+                            </div>
+                            <div class="module-meta-card">
+                                <strong>調校重點</strong>
+                                <span id="moduleTuning">依照感光元件尺寸、FOV 與工作距離挑選焦距與像圈。</span>
+                            </div>
+                            <div class="module-meta-card">
+                                <strong>常見影響</strong>
+                                <span id="moduleImpact">鏡頭選錯會造成邊角模糊、變形、暗角或景深不足。</span>
+                            </div>
+                            <div class="module-meta-card">
+                                <strong>適用提示</strong>
+                                <span id="moduleHint">需要量測精度時可改用遠心鏡頭，減少透視誤差。</span>
+                            </div>
+                        </div>
+                        <div class="module-tip" id="moduleTip">互動提示：依序查看光圈、快門、感光元件與物距，可快速理解清晰度、亮度與速度之間的取捨。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section reveal">
+            <h2 class="section-title">
+                <span>⚡</span>
+                <span>快門類型互動演示 (Rolling vs Global Shutter)</span>
+            </h2>
+            <div class="section-content">
+                <p class="mb-4">拍攝移動中的物體時，快門類型的選擇至關重要。Rolling Shutter 會產生果凍效應（變形），而 Global Shutter 則能捕捉精確的瞬間。</p>
+                <div class="shutter-demo" id="shutterDemo">
+                    <div class="shutter-bar" id="shutterBar"></div>
+                    <img src="https://api.kuse.ai/api/folder/v1/file/acbb4615531fd1dda194eb50abefcf22e6b80bd803eab7a99f36022b5a7aa678_6827599.jpeg" class="shutter-image" id="demoImg">
+                </div>
+                <div class="flex justify-center gap-4 mt-4">
+                    <button onclick="playShutter('rolling')" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">模擬 Rolling Shutter</button>
+                    <button onclick="playShutter('global')" class="bg-green-600 px-4 py-2 rounded hover:bg-green-700 transition">模擬 Global Shutter</button>
+                    <button onclick="resetShutter()" class="bg-gray-600 px-4 py-2 rounded hover:bg-gray-700 transition">重置</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function playShutter(type) {
+                const bar = document.getElementById('shutterBar');
+                const img = document.getElementById('demoImg');
+                resetShutter();
+                
+                if(type === 'rolling') {
+                    bar.style.display = 'block';
+                    gsap.to(bar, { top: '100%', duration: 2, ease: "none" });
+                    gsap.to(img, { skewX: 15, duration: 2, ease: "none" });
+                } else {
+                    gsap.fromTo(img, { opacity: 0 }, { opacity: 1, duration: 0.1 });
+                }
+            }
+            function resetShutter() {
+                const bar = document.getElementById('shutterBar');
+                const img = document.getElementById('demoImg');
+                gsap.killTweensOf([bar, img]);
+                bar.style.top = '0';
+                bar.style.display = 'none';
+                img.style.transform = 'none';
+                img.style.opacity = '1';
+            }
+            
+            // Intersection Observer for Reveal
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('active');
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        </script>
+
+        <div class="section">
+            <h2 class="section-title">
+                <span>📸</span>
+                <span>相機與鏡頭的搭配</span>
+            </h2>
+            <div class="section-content">
+                <div class="subsection">
+                    <ul class="content-list">
+                        <li><strong>基本成像原理</strong>：物距、像距與焦距的關係決定了成像的清晰度與大小</li>
+                        <li><strong>成像公式</strong>：1/f = 1/u + 1/v，其中 f 為焦距，u 為物距，v 為像距</li>
+                        <li><strong>放大倍率</strong>：α = v/u = 像高/物高，決定物體在感光元件上的成像大小</li>
+                        <li><strong>FOV (視野範圍)</strong>：Field of View 決定可檢測的區域大小，影響檢測範圍與精度的平衡，FOV = Sensor Size / α</li>
+                        <li><strong>Image Circle & Sensor Size</strong>：鏡頭成像圈需大於感光元件尺寸，否則會產生暗角或成像不完整</li>
+                    </ul>
+                </div>
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="圖片/基本成像原理.jpg">
+                    </div>
+                    <div class="image-card">
+                        <img src="https://api.kuse.ai/api/folder/v1/file/015e873153acdd566db3f2693bbb4088c92d6e036c840768f0efa9206da2234b_2800600.jpeg" alt="相機與鏡頭搭配示意圖2">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">
+                <span>📹</span>
+                <span>相機規格及選用</span>
+            </h2>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3 class="subsection-title">
+                        <span>🔸</span>
+                        <span>一般相機 vs 工業相機</span>
+                    </h3>
+                    <ul class="content-list">
+                        <li><strong>工業相機</strong>：高穩定性、長壽命、標準接口，適合長時間連續運作的生產環境</li>
+                        <li><strong>一般相機</strong>：消費級、價格低、壽命短，適合非關鍵或短期應用</li>
+                    </ul>
+                </div>
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="https://api.kuse.ai/api/folder/v1/file/fb3128cd519fe9a2e952a021db71cd70fdec79053f7ab29ba2370f3cb5c375d3_2800651.jpeg" alt="相機規格示意圖2">
+                    </div>
+                    <div class="image-card">
+                        <img src="https://api.kuse.ai/api/folder/v1/file/629fa09e95cfa7a7059ab61422d94e6953fa19be404fa93b3a70384f37fbab2f_2800648.jpeg" alt="相機規格示意圖1">
+                    </div>
+                </div>
+                <div class="subsection">
+                    <h3 class="subsection-title">
+                        <span>🔸</span>
+                        <span>關鍵規格參數</span>
+                    </h3>
+                    <ul class="content-list">
+                        <li><strong>感光元件</strong>：CCD vs CMOS - CCD 影像品質佳但成本高，CMOS 速度快且功耗低</li>
+                        <li><strong>解析度</strong>：影響檢測精度，高解析度可檢測更細微的缺陷</li>
+                        <li><strong>Pixel Size</strong>：單一像素的實際尺寸，影響感光度與動態範圍</li>
+                        <li><strong>傳輸介面</strong>：GigE（網路傳輸）、USB3.0（即插即用）、Camera Link（高速傳輸）</li>
+                        <li><strong>快門類型</strong>：全域快門（適合高速運動物體）vs 滾動快門（成本較低但可能產生果凍效應）</li>
+                    </ul>
+                </div>
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="圖片/傳輸介面.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">
+                <span>🔭</span>
+                <span>鏡頭規格及選用</span>
+            </h2>
+            <div class="section-content">
+                <div class="subsection">
+                    <ul class="content-list">
+                        <li><strong>焦距選擇</strong>：短焦（廣角視野）、標準（接近人眼視角）、長焦鏡頭（遠距離拍攝）</li>
+                        <li><strong>光圈大小</strong>：影響進光量與景深，大光圈（小f值）進光多但景深淺</li>
+                        <li><strong>景深 (DOF)</strong>：清晰成像的深度範圍，受光圈、焦距、物距影響</li>
+                    </ul>
+                </div>
+                <div class="subsection">
+                    <h3 class="subsection-title">
+                        <span>🔸</span>
+                        <span>鏡頭類型</span>
+                    </h3>
+                    <ul class="content-list">
+                        <li><strong>定焦鏡頭</strong>：固定焦距，光學品質佳，適合固定距離檢測</li>
+                        <li><strong>變焦鏡頭</strong>：可調整焦距，彈性高但光學品質略降</li>
+                        <li><strong>微距鏡頭</strong>：近距離拍攝，適合精密零件檢測</li>
+                    </ul>
+                </div>
+                <div class="subsection">
+                    <h3 class="subsection-title">
+                        <span>🔸</span>
+                        <span>鏡頭接口</span>
+                    </h3>
+                    <ul class="content-list">
+                        <li><strong>C-mount</strong>：螺紋直徑 1 英吋，法蘭距 17.526mm</li>
+                        <li><strong>CS-mount</strong>：螺紋直徑 1 英吋，法蘭距 12.5mm（較短）</li>
+                    </ul>
+                </div>
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="圖片/相機接口.png">
+                    </div>
+                    <div class="image-card">
+                        <img src="圖片/鏡頭.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">
+                <span>🎯</span>
+                <span>遠心鏡頭及線掃描相機</span>
+            </h2>
+            <div class="section-content">
+                <div class="subsection">
+                    <h3 class="subsection-title">
+                        <span>🔸</span>
+                        <span>遠心鏡頭優勢</span>
+                    </h3>
+                    <ul class="content-list">
+                        <li><strong>消除透視誤差</strong>：主光線平行於光軸，不受物距變化影響</li>
+                        <li><strong>物體在不同距離下放大倍率相同</strong>：確保測量精度不受物體位置影響</li>
+                        <li><strong>適合精密測量</strong>：尺寸測量、定位檢測等高精度應用</li>
+                    </ul>
+                </div>
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="圖片/遠心系統.jpg">
+                    </div>
+                    <div class="image-card">
+                        <img src="圖片/遠心鏡頭vs傳統鏡頭.jpg">
+                    </div>
+                    <div class="image-card">
+                        <img src="圖片/遠心鏡頭vs傳統鏡頭_物體.jpg">
+                    </div>
+                </div>
+                <div class="subsection">
+                    <h3 class="subsection-title">
+                        <span>🔸</span>
+                        <span>線掃描相機</span>
+                    </h3>
+                    <ul class="content-list">
+                        <li><strong>一次掃描一行像素</strong>：感光元件為線性排列</li>
+                        <li><strong>適合連續移動物體檢測</strong>：如傳送帶上的產品、卷材檢測</li>
+                        <li><strong>高解析度、高速度</strong>：可達到極高的掃描精度與速度</li>
+                    </ul>
+                </div>
+                <div class="image-grid">
+                    <div class="image-card">
+                        <img src="圖片/線掃描相機.jpg">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="video-section">
+            <h2 class="section-title">
+                <span>🎬</span>
+                <span>相關教學影片</span>
+            </h2>
+            <div class="video-grid">
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/IeXPsNyjCNU" allowfullscreen></iframe>
+                </div>
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/fDLFP3VSdoE" allowfullscreen></iframe>
+                </div>
+                <div class="video-container">
+                    <iframe src="https://www.youtube.com/embed/uaqEyVcMZQA" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+
+        <div class="pdf-section">
+            <h2 class="section-title">
+                <span>📚</span>
+                <span>相關PDF講義</span>
+            </h2>
+            <div class="pdf-button">
+                <a href="課程簡報&心智圖/機器視覺檢測2-相機與鏡頭的搭配.pdf" target="_blank" class="pdf-button">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-title">機器視覺檢測2-相機與鏡頭的搭配.pdf</div>
+                </a>
+                <a href="課程簡報&心智圖/機器視覺檢測3-相機規格及選用.pdf" target="_blank" class="pdf-button">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-title">機器視覺檢測3-相機規格及選用.pdf</div>
+                </a>
+                <a href="課程簡報&心智圖/機器視覺檢測4-鏡頭規格及選用.pdf" target="_blank" class="pdf-button">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-title">機器視覺檢測4-鏡頭規格及選用.pdf</div>
+                </a>
+                <a href="課程簡報&心智圖/相機與鏡頭的搭配_KM.pdf" target="_blank" class="pdf-button">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-title">相機與鏡頭的搭配_KM.pdf</div>
+                </a>
+                <a href="課程簡報&心智圖/鏡頭規格及選用_KM.pdf" target="_blank" class="pdf-button">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-title">鏡頭規格及選用_KM.pdf</div>
+                </a>
+                <a href="課程簡報&心智圖/遠心鏡頭及線掃描相機KM.pdf" target="_blank" class="pdf-button">
+                    <div class="pdf-icon">📄</div>
+                    <div class="pdf-title">遠心鏡頭及線掃描相機KM.pdf</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p> 2026 機器視覺檢測課程</p>
+            <a href="https://kuse.ai" target="_blank" class="kuse-branding">
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        const imagingModules = {
+            '鏡頭': {
+                description: '鏡頭負責把待測物反射或穿透的光線整形成可用影像，是 AOI 決定解析度、畸變與視野大小的第一站。',
+                role: '決定視野、放大倍率與影像邊緣品質。',
+                tuning: '依照感光元件尺寸、FOV 與工作距離挑選焦距與像圈。',
+                impact: '鏡頭選錯會造成邊角模糊、變形、暗角或景深不足。',
+                hint: '需要量測精度時可改用遠心鏡頭，減少透視誤差。',
+                tip: '互動提示：依序查看光圈、快門、感光元件與物距，可快速理解清晰度、亮度與速度之間的取捨。'
+            },
+            '鏡頭接口': {
+                description: '鏡頭接口連接鏡頭與相機本體，常見有 C-mount 與 CS-mount，決定法蘭距與機械相容性。',
+                role: '確保鏡頭可正確安裝並對準感光面。',
+                tuning: '確認螺牙規格、法蘭距與像圈是否符合相機。',
+                impact: '接口不匹配會導致無法對焦、畫面偏移或成像裁切。',
+                hint: '高震動產線要留意鎖固與防鬆設計。',
+                tip: 'AOI 換線時常從接口規格先確認，可避免整組模組無法裝配。'
+            },
+            '光圈': {
+                description: '光圈控制進光量與景深，是影像亮度、清晰範圍與曝光時間的重要平衡點。',
+                role: '調整亮度並擴大或縮小景深範圍。',
+                tuning: '亮度不足時開大光圈；需更多景深時縮小光圈並補足照明。',
+                impact: '光圈過大易失焦，過小則可能因繞射讓影像變軟。',
+                hint: '尺寸量測與多高度物件檢測時，景深常比亮度更優先。',
+                tip: '搭配頻閃光源時，可用較小光圈維持清晰度而不犧牲亮度。'
+            },
+            '快門': {
+                description: '快門決定感光時間，會直接影響動態模糊、同步打光與高速檢測的穩定度。',
+                role: '凍結移動物體或提升曝光量。',
+                tuning: '高速產線常搭配全域快門與短曝光，避免果凍效應。',
+                impact: '曝光太長會模糊，太短則可能造成訊號不足。',
+                hint: '檢測高速輸送帶、晶圓搬運或連續捲材時，快門策略很關鍵。',
+                tip: '先看畫面有沒有拖影，再決定要調快門還是增強光源。'
+            },
+            '相機': {
+                description: '相機本體整合感測器、傳輸與控制模組，是 AOI 取像系統的核心硬體。',
+                role: '負責擷取影像、同步觸發與傳輸資料。',
+                tuning: '依節拍挑選解析度、幀率、介面與全域/滾動快門。',
+                impact: '相機等級不足可能導致漏拍、延遲、噪聲或資料瓶頸。',
+                hint: '長時間運作場景優先選工業相機，穩定度與壽命較佳。',
+                tip: '若產線節拍提高，常要同時檢查幀率、曝光與傳輸介面。'
+            },
+            '感光元件': {
+                description: '感光元件把光信號轉成電訊號，是解析度、動態範圍與訊噪比的來源。',
+                role: '記錄影像細節、灰階層次與顏色資訊。',
+                tuning: '像素尺寸越大通常感度越高；解析度越高則可看更細缺陷。',
+                impact: '感測器尺寸與像素不匹配，會影響視野、靈敏度與鏡頭選型。',
+                hint: '低對比缺陷可優先考慮高動態範圍或低雜訊感測器。',
+                tip: 'AOI 常在解析度與速度之間取捨，感光元件就是關鍵節點。'
+            },
+            '底座': {
+                description: '底座提供模組固定、角度定位與抗震支撐，讓相機與鏡頭在量產環境維持重複性。',
+                role: '穩定取像姿態，避免機構偏移。',
+                tuning: '確保水平、垂直與工作距離固定，並留意熱膨脹。',
+                impact: '固定不穩會造成對位飄移、重拍率上升與量測誤差。',
+                hint: '高精度量測工站常加強剛性與減振設計。',
+                tip: '如果演算法忽然不穩，先檢查底座與治具是否鬆動。'
+            },
+            '焦距': {
+                description: '焦距描述鏡頭聚焦能力，影響視角、放大倍率與工作距離配置。',
+                role: '決定看得多廣、看得多近。',
+                tuning: '短焦看大範圍，長焦看細節；需同時考慮畸變與安裝空間。',
+                impact: '焦距過短可能變形，過長則視野不足、安裝距離變長。',
+                hint: '先從目標 FOV 反推焦距，能更快找到合適鏡頭。',
+                tip: '焦距不是越長越好，而是要和感測器尺寸、物距一起看。'
+            },
+            '物距': {
+                description: '物距是鏡頭到待測物的距離，會影響清晰度、視野、照明布局與安全空間。',
+                role: '決定模組與被測物之間的實際工作位置。',
+                tuning: '需保留治具、光源與維修空間，同時滿足成像比例。',
+                impact: '物距改變會影響放大倍率、對焦位置與景深分布。',
+                hint: '在傳送帶或機械手臂場景，物距穩定性直接影響重複精度。',
+                tip: '若換產品後視野不對，通常要連同物距與焦距一起重算。'
+            }
+        };
+
+        function updateImagingModule(partName) {
+            const data = imagingModules[partName];
+            if (!data) return;
+            document.getElementById('moduleTitle').textContent = partName;
+            document.getElementById('moduleDescription').textContent = data.description;
+            document.getElementById('moduleRole').textContent = data.role;
+            document.getElementById('moduleTuning').textContent = data.tuning;
+            document.getElementById('moduleImpact').textContent = data.impact;
+            document.getElementById('moduleHint').textContent = data.hint;
+            document.getElementById('moduleTip').textContent = data.tip;
+            document.querySelectorAll('.module-hotspot').forEach((btn) => {
+                btn.classList.toggle('active', btn.dataset.part === partName);
+            });
+            gsap.fromTo('#moduleInfoPanel', { y: 12, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' });
+        }
+
+        function toggleMenu() {
+            const navLinks = document.getElementById(`navLinks`);
+            navLinks.classList.toggle(`active`);
+        }
+
+        document.addEventListener(`DOMContentLoaded`, function() {
+            document.querySelectorAll('.module-hotspot').forEach((button) => {
+                button.addEventListener('click', () => updateImagingModule(button.dataset.part));
+            });
+            updateImagingModule('鏡頭');
+
+            const images = document.querySelectorAll(`.image-card img`);
+            images.forEach(img => {
+                img.addEventListener(`click`, function() {
+                    window.open(this.src, `_blank`);
+                });
+            });
+        });
+    </script>
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+</body>
+</html>

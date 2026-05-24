@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程資源 - 機器視覺檢測</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: #f7fafc;
+            color: #667eea;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-subtitle {
+            color: #718096;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .pdf-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pdf-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .pdf-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .video-group {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .video-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .video-group-header:hover {
+            background: #f7fafc;
+        }
+
+        .video-item {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .video-item:hover {
+            background: #edf2f7;
+            transform: translateX(5px);
+        }
+
+        .video-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .video-btn:hover {
+            background: #c53030;
+            transform: scale(1.05);
+        }
+
+        .external-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .external-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.15);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .footer {
+            background: rgba(45, 55, 72, 0.95);
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .video-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .video-content.expanded {
+            max-height: 2000px;
+        }
+
+        .kuse-branding {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #718096;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .kuse-branding:hover {
+            color: #667eea;
+        }
+
+        .kuse-branding svg {
+            height: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                機器視覺檢測
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="index.html" class="nav-link">首頁</a>
+                <a href="introduction.html" class="nav-link">機器視覺簡介</a>
+                <a href="imaging.html" class="nav-link">取像模組</a>
+                <a href="lighting.html" class="nav-link">光源照明</a>
+                <a href="processing.html" class="nav-link">影像處理</a>
+                <a href="application.html" class="nav-link">檢測應用</a>
+                <a href="resources.html" class="nav-link active">課程資源</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="hero-icon">📚</div>
+        <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 0.5rem;">課程資源</h1>
+        <p style="font-size: 1.25rem; opacity: 0.9;">Course Resources</p>
+    </div>
+
+    <div style="max-width: 1200px; margin: 0 auto; padding: 3rem 2rem;">
+        <section style="margin-bottom: 4rem;">
+            <h2 class="section-title">
+                <span>📄</span>
+                PDF講義下載
+            </h2>
+            <p class="section-subtitle">完整課程講義，涵蓋機器視覺檢測所有核心知識</p>
+            
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: #4a5568; margin-bottom: 1.5rem;">主要講義系列</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="pdf-card">
+                    <div class="pdf-icon">📄</div>
+                    <h4 style="font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">機器視覺檢測簡介</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-bottom: 1rem;">4.2 MB</p>
+                    <button class="download-btn">下載講義</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon">📄</div>
+                    <h4 style="font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">相機與鏡頭的搭配</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-bottom: 1rem;">1.8 MB</p>
+                    <button class="download-btn">下載講義</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon">📄</div>
+                    <h4 style="font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">相機規格及選用</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-bottom: 1rem;">2.8 MB</p>
+                    <button class="download-btn">下載講義</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon">📄</div>
+                    <h4 style="font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">鏡頭規格及選用</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-bottom: 1rem;">2.0 MB</p>
+                    <button class="download-btn">下載講義</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon">📄</div>
+                    <h4 style="font-weight: 600; color: #2d3748; margin-bottom: 0.5rem;">光源與照明的設計</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-bottom: 1rem;">2.7 MB</p>
+                    <button class="download-btn">下載講義</button>
+                </div>
+            </div>
+
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: #4a5568; margin-bottom: 1.5rem;">知識管理講義系列 (KM)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">相機與鏡頭的搭配_KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">53.6 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">取像參數的選用KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">41.1 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">鏡頭規格及選用_KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">33.9 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">遠心鏡頭及線掃描相機KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">31.6 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">光源與照明設計KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">41.7 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">影像空間濾波KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">49.7 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">影像分割KM1</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">44.5 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+                <div class="pdf-card">
+                    <div class="pdf-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">📋</div>
+                    <h4 style="font-weight: 600; color: #2d3748; font-size: 0.95rem; margin-bottom: 0.5rem;">彩色成像品質的優化KM</h4>
+                    <p style="color: #718096; font-size: 0.8rem; margin-bottom: 0.75rem;">55.5 KB</p>
+                    <button class="download-btn" style="padding: 0.5rem 1rem; font-size: 0.875rem;">下載</button>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: 4rem;">
+            <h2 class="section-title">
+                <span>🎥</span>
+                教學影片庫
+            </h2>
+            <p class="section-subtitle">14支精選教學影片，系統化學習機器視覺檢測</p>
+
+            <div class="video-group">
+                <div class="video-group-header" onclick="toggleVideoGroup('group1')">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748;">第一組：機器視覺基礎</h3>
+                    <span class="toggle-icon" id="icon-group1">▼</span>
+                </div>
+                <div class="video-content expanded" id="content-group1">
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">整理機器視覺檢測</span>
+                        <a href="https://www.youtube.com/watch?v=n8nMBYNkGb0" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-group">
+                <div class="video-group-header" onclick="toggleVideoGroup('group2')">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748;">第二組：網站整理教學（一）</h3>
+                    <span class="toggle-icon" id="icon-group2">▼</span>
+                </div>
+                <div class="video-content expanded" id="content-group2">
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">網站整理教學 Part 1</span>
+                        <a href="https://www.youtube.com/watch?v=IeXPsNyjCNU" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">網站整理教學 Part 2</span>
+                        <a href="https://www.youtube.com/watch?v=fDLFP3VSdoE" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">網站整理教學 Part 3</span>
+                        <a href="https://www.youtube.com/watch?v=uaqEyVcMZQA" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-group">
+                <div class="video-group-header" onclick="toggleVideoGroup('group3')">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748;">第三組：網站整理教學（二）</h3>
+                    <span class="toggle-icon" id="icon-group3">▼</span>
+                </div>
+                <div class="video-content expanded" id="content-group3">
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">網站整理教學 Part 4</span>
+                        <a href="https://www.youtube.com/watch?v=zav3w2nk-PU" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">網站整理教學 Part 5</span>
+                        <a href="https://www.youtube.com/watch?v=EeGd5nbLIUc" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">網站整理教學 Part 6</span>
+                        <a href="https://www.youtube.com/watch?v=EgzT2La0E2k" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-group">
+                <div class="video-group-header" onclick="toggleVideoGroup('group4')">
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748;">第四組：影像處理進階</h3>
+                    <span class="toggle-icon" id="icon-group4">▼</span>
+                </div>
+                <div class="video-content expanded" id="content-group4">
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">影像空間濾波</span>
+                        <a href="https://www.youtube.com/watch?v=QhROA8LIQb0" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">影像頻率濾波</span>
+                        <a href="https://www.youtube.com/watch?v=LAoARiVcFM8" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">影像處理技術 Part 1</span>
+                        <a href="https://www.youtube.com/watch?v=ekAo-4ajUS8" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">影像處理技術 Part 2</span>
+                        <a href="https://www.youtube.com/watch?v=B894m4K3Lyo" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                    <div class="video-item">
+                        <span style="font-weight: 500; color: #4a5568;">影像處理技術 Part 3</span>
+                        <a href="https://www.youtube.com/watch?v=7aSh75zHw-Q" target="_blank" class="video-btn">
+                            ▶️ 觀看影片
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: 4rem;">
+            <h2 class="section-title">
+                <span>🔗</span>
+                外部參考資源
+            </h2>
+            <p class="section-subtitle">擴展學習資源，提供更多學習管道</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
+                <div class="external-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌐</div>
+                    <h3 style="font-size: 1.5rem; font-weight: 600; color: #2d3748; margin-bottom: 0.75rem;">Google Sites 參考網站</h3>
+                    <p style="color: #718096; margin-bottom: 1.5rem; line-height: 1.6;">課程原始參考網站，包含完整課程架構與學習資源整理</p>
+                    <a href="https://sites.google.com/view/mvi20240208" target="_blank" class="download-btn" style="display: inline-block;">
+                        前往參考網站 →
+                    </a>
+                </div>
+
+                <div class="external-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">📌</div>
+                    <h3 style="font-size: 1.5rem; font-weight: 600; color: #2d3748; margin-bottom: 0.75rem;">Padlet 學習資源</h3>
+                    <p style="color: #718096; margin-bottom: 1.5rem; line-height: 1.6;">課程協作平台，學生作業展示與討論交流區</p>
+                    <a href="https://padlet.com/fishyhn/114-p0syon90iv9byzqd" target="_blank" class="download-btn" style="display: inline-block;">
+                        前往Padlet →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-bottom: 4rem;">
+            <h2 class="section-title">
+                <span>📊</span>
+                課程資源統計
+            </h2>
+            <p class="section-subtitle">完整的學習資源數據一覽</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div class="stat-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📄</div>
+                    <div class="stat-number">13</div>
+                    <h4 style="font-weight: 600; color: #4a5568; margin-top: 0.5rem;">PDF講義</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-top: 0.25rem;">總大小約 15 MB</p>
+                </div>
+
+                <div class="stat-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎥</div>
+                    <div class="stat-number">14</div>
+                    <h4 style="font-weight: 600; color: #4a5568; margin-top: 0.5rem;">教學影片</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-top: 0.25rem;">涵蓋基礎到進階</p>
+                </div>
+
+                <div class="stat-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📚</div>
+                    <div class="stat-number">6</div>
+                    <h4 style="font-weight: 600; color: #4a5568; margin-top: 0.5rem;">知識模組</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-top: 0.25rem;">系統化學習路徑</p>
+                </div>
+
+                <div class="stat-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔗</div>
+                    <div class="stat-number">2</div>
+                    <h4 style="font-weight: 600; color: #4a5568; margin-top: 0.5rem;">外部資源</h4>
+                    <p style="color: #718096; font-size: 0.875rem; margin-top: 0.25rem;">擴展學習資源</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">
+                <span>💡</span>
+                學習建議
+            </h2>
+            <p class="section-subtitle">系統化學習路徑，循序漸進掌握機器視覺檢測</p>
+
+            <div style="display: grid; gap: 2rem;">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748; margin-bottom: 0.75rem; padding-top: 0.5rem;">第一階段：基礎認知</h3>
+                    <ul style="color: #4a5568; line-height: 1.8; padding-left: 1.5rem;">
+                        <li>閱讀「機器視覺檢測簡介」講義</li>
+                        <li>觀看基礎教學影片</li>
+                        <li>了解AOI自動光學檢測基本概念</li>
+                        <li>認識機器視覺在工業檢測中的應用</li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748; margin-bottom: 0.75rem; padding-top: 0.5rem;">第二階段：硬體知識</h3>
+                    <ul style="color: #4a5568; line-height: 1.8; padding-left: 1.5rem;">
+                        <li>學習取像模組相關講義（相機與鏡頭）</li>
+                        <li>學習光源照明設計原理</li>
+                        <li>理解硬體選型與搭配原則</li>
+                        <li>掌握取像參數設定方法</li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748; margin-bottom: 0.75rem; padding-top: 0.5rem;">第三階段：軟體技術</h3>
+                    <ul style="color: #4a5568; line-height: 1.8; padding-left: 1.5rem;">
+                        <li>學習影像處理技術（濾波、分割等）</li>
+                        <li>觀看影像處理進階教學影片</li>
+                        <li>實踐影像處理演算法應用</li>
+                        <li>了解彩色成像品質優化方法</li>
+                    </ul>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; color: #2d3748; margin-bottom: 0.75rem; padding-top: 0.5rem;">第四階段：實務應用</h3>
+                    <ul style="color: #4a5568; line-height: 1.8; padding-left: 1.5rem;">
+                        <li>學習檢測應用案例分析</li>
+                        <li>結合理論知識與實務操作</li>
+                        <li>參與課程專題項目實作</li>
+                        <li>在Padlet平台分享學習成果</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">課程資訊</h3>
+                <p style="opacity: 0.9; line-height: 1.6;">
+                    機器視覺檢測課程<br>
+                    系統化學習工業檢測技術<br>
+                    理論與實務並重
+                </p>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">授課教師</h3>
+                <p style="opacity: 0.9; line-height: 1.6;">
+                    顏旭男 教授<br>
+                    機器視覺檢測專家<br>
+                    工業自動化領域資深講師
+                </p>
+            </div>
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">快速連結</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <a href="https://sites.google.com/view/mvi20240208" target="_blank" style="color: white; opacity: 0.9; text-decoration: none; transition: opacity 0.3s;">Google Sites</a>
+                    <a href="https://padlet.com/fishyhn/114-p0syon90iv9byzqd" target="_blank" style="color: white; opacity: 0.9; text-decoration: none; transition: opacity 0.3s;">Padlet 平台</a>
+                </div>
+            </div>
+        </div>
+        <div style="max-width: 1200px; margin: 2rem auto 0; padding-top: 2rem; border-top: 1px solid rgba(255, 255, 255, 0.2); text-align: center; opacity: 0.8;">
+            <p>© 2024 機器視覺檢測課程 | 教學網站</p>
+            <a href="https://kuse.ai" target="_blank" class="kuse-branding" style="margin-top: 1rem; justify-content: center;">
+                <span>made with</span>
+                <svg viewBox="0,0,160,44" xmlns="http://www.w3.org/2000/svg"><path d="m.01,20.65C-.43,8.25,9.3-2.03,22.04.34,34.78,2.72,43.29,8.32,43.29,22.9s-8.66,19.01-22.03,20.3C7.9,44.5.46,33.05.01,20.65z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="m146.76,7.94c8.07,0,13.24,6.15,13.24,14.58v1.39h-20.75c.45,4.05,3.51,7.37,8.57,7.37,2.62,0,5.73-1.05,7.62-2.94l2.67,3.83c-2.67,2.55-6.62,3.88-10.9,3.88-8.07,0-14.08-5.6-14.08-14.08,0-7.76,5.67-14.02,13.63-14.02zm0,4.77c-5.01,0-7.29,3.83-7.57,7.1h15.13c-.11-3.16-2.28-7.1-7.57-7.1z" fill="currentColor"/><path d="m86.64,24.49c0,4.15,2.39,6.84,6.84,6.84,4.4,0,6.84-2.69,6.84-6.84V8.55h5.37v16.33c0,6.7-4.06,11.14-12.21,11.14-8.21,0-12.21-4.5-12.21-11.09V8.55h5.37v15.94zm32.99-16.55c4.49,0,8.06,1.47,10.6,3.86l-2.59,3.81c-2.05-2-5.28-3.08-8.06-3.08-2.88,0-4.84,1.37-4.84,3.32,0,1.91,2.64,2.54,5.81,3.27,4.59,1.08,10.26,2.4,10.26,8.46,0,4.94-3.76,8.41-11.14,8.41-4.98,0-8.94-1.76-11.24-4.11l2.54-4.11c1.86,1.91,5.18,3.67,8.84,3.67,3.91,0,5.57-1.66,5.57-3.62,0-2.3-2.88-2.98-6.21-3.76-4.54-1.08-9.87-2.3-9.87-8.06,0-4.5,4.2-8.06,10.31-8.06zM60.79,20.82,71.44,8.55h6.5L66.46,21.26,78.82,35.44h-6.5l-9.28-11.1-2.25,2.49v8.6h-5.33V8.55h5.33v12.27z" fill="currentColor"/></svg>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        function toggleVideoGroup(groupId) {
+            const content = document.getElementById(`content-${groupId}`);
+            const icon = document.getElementById(`icon-${groupId}`);
+            
+            content.classList.toggle(`expanded`);
+            icon.classList.toggle(`rotated`);
+        }
+    </script>
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+</body>
+</html>

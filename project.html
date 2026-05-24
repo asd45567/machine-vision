@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專題報告 - PCB 瑕疵自動化檢測系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --neon-green: #00ff9d;
+            --blue-accent: #58a6ff;
+            --bg-primary: #0d1117;
+            --bg-card: #161b22;
+            --bg-item: #21262d;
+            --border: #30363d;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            scroll-behavior: smooth;
+        }
+
+        .navbar {
+            background: #1a237e;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .sidebar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
+
+        .menu-header {
+            cursor: pointer;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--neon-green);
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .menu-content { overflow: hidden; transition: max-height 0.3s ease-out; }
+        .menu-content.collapsed { max-height: 0; }
+
+        .nav-item {
+            display: block;
+            padding: 0.6rem 1.2rem;
+            color: #c9d1d9;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.875rem;
+        }
+        .nav-item:hover { background: rgba(33,150,243,0.1); color: var(--blue-accent); border-left-color: var(--blue-accent); }
+
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: var(--blue-accent);
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-title::before { content: "▹"; color: var(--neon-green); }
+
+        .code-box {
+            background: #000;
+            color: var(--neon-green);
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            margin: 1rem 0;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            line-height: 1.6;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .stat-item {
+            background: var(--bg-item);
+            padding: 1.2rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--neon-green); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+        .highlight { color: var(--blue-accent); font-weight: 600; }
+        .highlight-green { color: var(--neon-green); font-weight: 600; }
+
+        /* 流程步驟 */
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--bg-item);
+            border: 1px solid var(--border);
+            margin-bottom: 0.75rem;
+        }
+        .step-num {
+            background: #1a237e;
+            color: white;
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        /* 瑕疵種類卡片 */
+        .defect-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .defect-card {
+            background: var(--bg-item);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .defect-card:hover { border-color: var(--blue-accent); transform: translateY(-2px); }
+        .defect-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+        .badge-func { background: rgba(255,80,80,0.15); color: #ff6b6b; border: 1px solid #ff6b6b44; }
+        .badge-cos  { background: rgba(255,193,7,0.15);  color: #ffc107; border: 1px solid #ffc10744; }
+
+        /* 架構圖 */
+        .arch-flow {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+        .arch-box {
+            background: var(--bg-item);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            min-width: 110px;
+            flex: 1;
+        }
+        .arch-box .icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+        .arch-box.active { border-color: var(--neon-green); }
+        .arch-box.yolo-box { border-color: var(--blue-accent); }
+        .arch-arrow {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            padding: 0 0.3rem;
+            flex-shrink: 0;
+        }
+
+        /* 結果圖展示 */
+        .result-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .tab-btn {
+            padding: 0.4rem 0.9rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--bg-item);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: #1a237e;
+            border-color: var(--blue-accent);
+            color: white;
+        }
+
+        .result-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .result-img-card {
+            background: var(--bg-item);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .result-img-card:hover { border-color: var(--blue-accent); }
+        .result-img-card img {
+            width: 100%; height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+        .result-img-info {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .result-img-info .defect-type {
+            color: var(--neon-green);
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        /* 標注色說明 */
+        .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+        .legend-dot { width: 14px; height: 14px; border-radius: 3px; }
+
+        /* 混淆矩陣表格 */
+        .conf-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 1rem; }
+        .conf-table th { background: #1a237e; color: white; padding: 0.5rem; text-align: center; }
+        .conf-table td { padding: 0.5rem; text-align: center; border: 1px solid var(--border); }
+        .conf-table .high { background: rgba(0,255,157,0.2); color: var(--neon-green); font-weight: 700; }
+        .conf-table .med  { background: rgba(255,193,7,0.1); color: #ffc107; }
+
+        /* 貢獻表 */
+        .contrib-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .contrib-table th { background: var(--bg-item); padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border); color: var(--blue-accent); }
+        .contrib-table td { padding: 0.75rem; border-bottom: 1px solid var(--border); color: #c9d1d9; }
+        .contrib-table tr:hover td { background: rgba(88,166,255,0.05); }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(88,166,255,0.15);
+            color: var(--blue-accent);
+            border: 1px solid #58a6ff44;
+            margin: 2px;
+        }
+
+        footer {
+            background: var(--bg-primary);
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        .info-box {
+            background: rgba(88,166,255,0.06);
+            border-left: 4px solid var(--blue-accent);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            color: #c9d1d9;
+            line-height: 1.7;
+        }
+        .warn-box {
+            background: rgba(255,193,7,0.06);
+            border-left: 4px solid #ffc107;
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            color: #c9d1d9;
+            line-height: 1.7;
+        }
+        .success-box {
+            background: rgba(0,255,157,0.06);
+            border-left: 4px solid var(--neon-green);
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            color: #c9d1d9;
+            line-height: 1.7;
+        }
+
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .arch-flow { flex-direction: column; } .arch-arrow { transform: rotate(90deg); } }
+    </style>
+</head>
+<body>
+
+<!-- 導覽列 -->
+<nav class="navbar py-4 px-6">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="index.html" class="text-xl font-bold text-white flex items-center gap-2">🔍 機器視覺檢測</a>
+        <div class="flex gap-6 text-sm flex-wrap">
+            <a href="index.html" class="hover:text-blue-400">首頁</a>
+            <a href="intro.html" class="hover:text-blue-400">機器視覺簡介</a>
+            <a href="imaging.html" class="hover:text-blue-400">取像模組</a>
+            <a href="lighting.html" class="hover:text-blue-400">光源照明</a>
+            <a href="processing.html" class="hover:text-blue-400">影像處理</a>
+            <a href="application.html" class="hover:text-blue-400">檢測應用</a>
+            <a href="project.html" class="text-blue-400 font-bold border-b-2 border-blue-400 pb-0.5">專題報告</a>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-6 py-10 flex flex-col md:flex-row gap-8">
+
+    <!-- 側邊選單 -->
+    <aside class="w-full md:w-60 sidebar flex-shrink-0">
+        <div class="menu-header" onclick="toggleMenu()">
+            <span id="menuIcon">︿ 專題報告</span>
+        </div>
+        <div class="menu-content" id="sidebarContent">
+            <a href="#section1"  class="nav-item">1. 專題概述</a>
+            <a href="#section2"  class="nav-item">2. 檢測物件</a>
+            <a href="#section3"  class="nav-item">3. 系統架構</a>
+            <a href="#section4"  class="nav-item">4. 資料集說明</a>
+            <a href="#section5"  class="nav-item">5. 影像預處理</a>
+            <a href="#section6"  class="nav-item">6. 模型訓練</a>
+            <a href="#section7"  class="nav-item">7. 推論整合</a>
+            <a href="#section8"  class="nav-item">8. 檢測結果</a>
+            <a href="#section9"  class="nav-item">9. 專題應用</a>
+            <a href="#section10" class="nav-item">10. 課程對應</a>
+            <a href="#section11" class="nav-item">11. 心得與貢獻</a>
+            <a href="#section12" class="nav-item">12. 參考資料</a>
+        </div>
+    </aside>
+
+    <!-- 主內容 -->
+    <main class="flex-1 min-w-0">
+
+        <!-- 標題 -->
+        <header class="mb-10 text-center content-card">
+            <div class="text-sm text-gray-500 mb-2 tracking-widest uppercase">Machine Vision — 機器視覺檢測專題</div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-3 leading-snug">
+                PCB 印刷電路板<br>
+                <span style="color: var(--neon-green)">瑕疵自動化檢測系統</span>
+            </h1>
+            <p class="text-gray-400 text-base mb-6">差異比對法（XOR）定位 ＋ YOLOv8 深度學習種類辨識</p>
+            <div class="stat-grid" style="max-width: 600px; margin: 0 auto;">
+                <div class="stat-item">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">瑕疵類別</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">1386</div>
+                    <div class="stat-label">訓練圖片數</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">91.9%</div>
+                    <div class="stat-label">mAP@0.5</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">PCB 板型數</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Section 1：專題概述 -->
+        <section id="section1" class="content-card">
+            <h2 class="section-title">1. 專題概述</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                本專題目標為建立一套針對 <span class="highlight">PCB 印刷電路板</span> 的自動化瑕疵檢測系統，能夠同時完成兩項核心任務：
+                <span class="highlight-green">瑕疵位置定位</span> 與 <span class="highlight-green">瑕疵種類辨識</span>。
+            </p>
+            <div class="two-col">
+                <div class="info-box">
+                    <strong style="color: var(--blue-accent)">傳統機器視覺方法</strong><br>
+                    採用差異比對法（absdiff）搭配形態學處理，利用與 Golden Sample（標準板）的畫素差異，精準找出瑕疵的空間位置。此方法計算輕量、定位準確。
+                </div>
+                <div class="info-box">
+                    <strong style="color: var(--blue-accent)">深度學習方法</strong><br>
+                    採用 YOLOv8 物件偵測模型，在整張 PCB 圖像上直接進行多類別瑕疵辨識，輸出每個瑕疵的種類標籤與信心值。
+                </div>
+            </div>
+            <div class="success-box">
+                <strong style="color: var(--neon-green)">兩階段整合策略：</strong>
+                XOR 差異比對負責找位置，YOLOv8 負責辨識種類，兩者結果透過 IoU 與中心點距離進行匹配合併，取得最佳精確度。
+            </div>
+        </section>
+
+        <!-- Section 2：檢測物件 -->
+        <section id="section2" class="content-card">
+            <h2 class="section-title">2. 檢測物件</h2>
+            <p class="text-gray-300 mb-4">本系統針對單層 PCB 板面進行瑕疵檢測，共涵蓋 <span class="highlight-green">6 種</span>工業常見瑕疵類型：</p>
+            <div class="defect-grid">
+                <div class="defect-card">
+                    <span class="defect-badge badge-func">功能性瑕疵</span>
+                    <div class="font-bold mb-1">Missing Hole</div>
+                    <div class="text-xs text-gray-400 leading-relaxed">通孔缺失，導致元件無法正確插接，直接影響電氣連接。</div>
+                </div>
+                <div class="defect-card">
+                    <span class="defect-badge badge-func">功能性瑕疵</span>
+                    <div class="font-bold mb-1">Open Circuit</div>
+                    <div class="text-xs text-gray-400 leading-relaxed">導線斷裂造成開路，電路無法正常導通。</div>
+                </div>
+                <div class="defect-card">
+                    <span class="defect-badge badge-func">功能性瑕疵</span>
+                    <div class="font-bold mb-1">Short Circuit</div>
+                    <div class="text-xs text-gray-400 leading-relaxed">相鄰導線接觸造成短路，可能導致元件損毀。</div>
+                </div>
+                <div class="defect-card">
+                    <span class="defect-badge badge-cos">外觀性瑕疵</span>
+                    <div class="font-bold mb-1">Mouse Bite</div>
+                    <div class="text-xs text-gray-400 leading-relaxed">板緣出現半圓形缺口，影響機械強度與長期可靠性。</div>
+                </div>
+                <div class="defect-card">
+                    <span class="defect-badge badge-cos">外觀性瑕疵</span>
+                    <div class="font-bold mb-1">Spur</div>
+                    <div class="text-xs text-gray-400 leading-relaxed">導線邊緣出現毛刺突起，長期可能演變為短路風險。</div>
+                </div>
+                <div class="defect-card">
+                    <span class="defect-badge badge-cos">外觀性瑕疵</span>
+                    <div class="font-bold mb-1">Spurious Copper</div>
+                    <div class="text-xs text-gray-400 leading-relaxed">殘留多餘銅箔，可能造成非預期導通路徑。</div>
+                </div>
+            </div>
+            <div class="warn-box mt-4">
+                功能性瑕疵（Missing Hole、Open Circuit、Short Circuit）直接影響 PCB 電氣性能，屬高優先級缺陷；外觀性瑕疵影響外觀與長期可靠度，同樣需要標記。
+            </div>
+        </section>
+
+        <!-- Section 3：系統架構 -->
+        <section id="section3" class="content-card">
+            <h2 class="section-title">3. 系統架構</h2>
+            <p class="text-gray-300 mb-4">整體系統分為兩條平行處理線，最後合併輸出結果：</p>
+
+            <!-- 架構流程圖 -->
+            <div style="background: var(--bg-item); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem; text-align: center;">── 輸入 ──────────────────────────────────────────── 輸出 ──</div>
+                <div class="arch-flow">
+                    <div class="arch-box">
+                        <span class="icon">📷</span>
+                        <div style="color: var(--text-muted); font-size: 0.7rem;">輸入影像</div>
+                        <div class="font-bold">Test PCB</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box active">
+                        <span class="icon">🔍</span>
+                        <div style="color: var(--neon-green); font-size: 0.7rem; font-weight: 700;">XOR 定位</div>
+                        <div>absdiff</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted)">Otsu + 形態學</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box active">
+                        <span class="icon">🟩</span>
+                        <div style="color: var(--neon-green); font-size: 0.7rem; font-weight: 700;">候選框</div>
+                        <div>ConnectedComponents</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted)">面積過濾 ≥100px</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box" style="border-color: #ffc107; background: rgba(255,193,7,0.05);">
+                        <span class="icon">🔗</span>
+                        <div style="color: #ffc107; font-size: 0.7rem; font-weight: 700;">IoU 合併</div>
+                        <div>匹配</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted)">dist ≤ 60px</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box" style="border-color: var(--blue-accent);">
+                        <span class="icon">📊</span>
+                        <div style="color: var(--blue-accent); font-size: 0.7rem; font-weight: 700;">輸出結果</div>
+                        <div>標注圖 + CSV</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted)">種類 + 信心值</div>
+                    </div>
+                </div>
+                <div style="border-top: 1px dashed var(--border); margin: 0.75rem 0;"></div>
+                <div class="arch-flow" style="margin-bottom: 0;">
+                    <div class="arch-box" style="opacity:0; pointer-events:none;"></div>
+                    <div class="arch-arrow" style="opacity:0;">→</div>
+                    <div class="arch-box yolo-box">
+                        <span class="icon">🧠</span>
+                        <div style="color: var(--blue-accent); font-size: 0.7rem; font-weight: 700;">YOLOv8 偵測</div>
+                        <div>整張圖推論</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted)">conf ≥ 0.10</div>
+                    </div>
+                    <div class="arch-arrow">→</div>
+                    <div class="arch-box yolo-box">
+                        <span class="icon">🏷️</span>
+                        <div style="color: var(--blue-accent); font-size: 0.7rem; font-weight: 700;">種類標籤</div>
+                        <div>6 類瑕疵</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted)">+ 信心值</div>
+                    </div>
+                    <div class="arch-arrow" style="opacity:0;">→</div>
+                    <div class="arch-box" style="opacity:0; pointer-events:none;"></div>
+                    <div class="arch-arrow" style="opacity:0;">→</div>
+                    <div class="arch-box" style="opacity:0; pointer-events:none;"></div>
+                </div>
+            </div>
+
+            <!-- 輸出顏色說明 -->
+            <h3 class="font-bold text-base mb-3" style="color: var(--blue-accent);">結果圖標注顏色說明</h3>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#00c800; border: 2px solid #00c800;"></div>
+                    <span><strong style="color:#00ff9d">綠框</strong> — XOR + YOLO 雙重確認，含種類標籤（最可信）</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#ff0000; border: 2px solid #ff0000;"></div>
+                    <span><strong style="color:#ff6b6b">紅框</strong> — 僅 XOR 偵測到，YOLO 未分類（瑕疵存在，種類待確認）</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#ff8000; border: 2px solid #ff8000;"></div>
+                    <span><strong style="color:#ff9944">橘框</strong> — 僅 YOLO 偵測到，XOR 面積過小被過濾（輕微瑕疵）</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4：資料集 -->
+        <section id="section4" class="content-card">
+            <h2 class="section-title">4. 資料集說明</h2>
+            <p class="text-gray-300 mb-4">
+                使用 Kaggle 公開資料集 <span class="highlight">PCB Defects（akhatova）</span>，包含工業 AOI 系統拍攝的 PCB 高解析度影像。
+            </p>
+            <div class="two-col mb-4">
+                <div>
+                    <h3 class="font-bold mb-3" style="color: var(--blue-accent);">📁 資料夾結構</h3>
+                    <div class="code-box" style="font-size: 0.75rem;">
+PCB_dataset/<br>
+├── <span style="color:#58a6ff">Annotations/</span>      ← Pascal VOC XML<br>
+│   ├── Missing_hole/<br>
+│   ├── Mouse_bite/<br>
+│   ├── Open_circuit/<br>
+│   ├── Short/<br>
+│   ├── Spur/<br>
+│   └── Spurious_copper/<br>
+├── <span style="color:#58a6ff">images/</span>           ← 瑕疵影像<br>
+│   └── (同上 6 個子資料夾)<br>
+└── <span style="color:#00ff9d">PCB_USED/</span>         ← Golden Sample<br>
+    └── 01.JPG ~ 12.JPG
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-3" style="color: var(--blue-accent);">📊 資料集統計</h3>
+                    <div class="stat-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="stat-item">
+                            <div class="stat-value" style="font-size: 1.3rem;">1386</div>
+                            <div class="stat-label">總影像數</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="font-size: 1.3rem;">2953</div>
+                            <div class="stat-label">標注物件數</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="font-size: 1.3rem;">10</div>
+                            <div class="stat-label">PCB 板型種類</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="font-size: 1.3rem;">3~5</div>
+                            <div class="stat-label">每張瑕疵個數</div>
+                        </div>
+                    </div>
+                    <div class="info-box" style="margin-top: 1rem;">
+                        標注格式為 <strong>Pascal VOC XML</strong>，每個瑕疵包含 bounding box 座標與類別名稱，需轉換為 YOLO <code>.txt</code> 格式才能訓練。
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-bold mb-3" style="color: var(--blue-accent);">Golden Sample（標準板）</h3>
+            <p class="text-sm text-gray-400 mb-3">PCB_USED 內存放 10 張不同型號的無瑕疵標準板，程式根據測試圖檔名前綴（如 <code>01_</code>）自動對應正確標準板：</p>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="tag">01.JPG</span><span class="tag">04.JPG</span><span class="tag">05.JPG</span>
+                <span class="tag">06.JPG</span><span class="tag">07.JPG</span><span class="tag">08.JPG</span>
+                <span class="tag">09.JPG</span><span class="tag">10.JPG</span><span class="tag">11.JPG</span><span class="tag">12.JPG</span>
+            </div>
+        </section>
+
+        <!-- Section 5：影像預處理 -->
+        <section id="section5" class="content-card">
+            <h2 class="section-title">5. 影像預處理（差異比對法）</h2>
+            <p class="text-gray-300 mb-4">
+                傳統機器視覺的核心步驟：將測試圖與 Golden Sample 做像素級比對，透過一連串影像處理操作提取出真實瑕疵位置。
+            </p>
+
+            <div class="space-y-3 mb-4">
+                <div class="step-item">
+                    <div class="step-num">1</div>
+                    <div>
+                        <strong class="text-blue-300">高斯模糊（Gaussian Blur）</strong>
+                        <p class="text-sm text-gray-400 mt-1">對 Golden Sample 與測試圖各自套用 5×5 高斯核，消除拍攝雜訊，避免細微光線差異被誤認為瑕疵。</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">2</div>
+                    <div>
+                        <strong class="text-blue-300">差異影像（absdiff）</strong>
+                        <p class="text-sm text-gray-400 mt-1">對兩張模糊後的灰階圖做絕對差值運算，只有存在差異的區域會產生非零像素，瑕疵位置呈現為亮白色區域。</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">3</div>
+                    <div>
+                        <strong class="text-blue-300">Otsu 自適應閾值</strong>
+                        <p class="text-sm text-gray-400 mt-1">使用 Otsu 算法自動計算最佳閾值，將差異圖二值化為黑白遮罩（mask），無需手動調整門檻值即可適應不同 PCB 板型。</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">4</div>
+                    <div>
+                        <strong class="text-blue-300">形態學處理（Opening + Closing）</strong>
+                        <p class="text-sm text-gray-400 mt-1">先做 Opening（侵蝕→膨脹）去除細碎雜訊，再做 Closing（膨脹→侵蝕）填補瑕疵區域內的空洞，使候選框更完整連通。使用 5×5 kernel，各迭代 2 次。</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">5</div>
+                    <div>
+                        <strong class="text-blue-300">連通區域分析（ConnectedComponentsWithStats）</strong>
+                        <p class="text-sm text-gray-400 mt-1">掃描二值遮罩中的連通區域，提取每個候選瑕疵的 bounding box（x, y, w, h）與面積。面積 &lt; 100 像素的區域視為雜訊直接過濾。</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="font-bold mb-2" style="color: var(--blue-accent);">核心程式碼</h3>
+            <div class="code-box">
+<pre>def get_diff_mask(golden_blur, test_blur):
+    <span style="color: #8b949e"># Step 2: 差異影像</span>
+    diff = cv2.absdiff(golden_blur, test_blur)
+    
+    <span style="color: #8b949e"># Step 3: Otsu 自適應閾值</span>
+    _, thresh = cv2.threshold(diff, 0, 255,
+                  cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    
+    <span style="color: #8b949e"># Step 4: 形態學去噪</span>
+    k = np.ones((5, 5), np.uint8)
+    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN,  k, iterations=2)
+    closed = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, k, iterations=2)
+    return closed
+
+def get_xor_boxes(mask):
+    <span style="color: #8b949e"># Step 5: 連通區域分析，面積過濾</span>
+    num_labels, _, stats, _ = cv2.connectedComponentsWithStats(
+                                  mask, connectivity=8)
+    boxes = []
+    for i in range(1, num_labels):
+        if stats[i, cv2.CC_STAT_AREA] >= 100:  <span style="color: #8b949e"># 面積門檻</span>
+            boxes.append((stats[i, cv2.CC_STAT_LEFT],
+                          stats[i, cv2.CC_STAT_TOP],
+                          stats[i, cv2.CC_STAT_WIDTH],
+                          stats[i, cv2.CC_STAT_HEIGHT]))
+    return boxes</pre>
+            </div>
+        </section>
+
+        <!-- Section 6：模型訓練 -->
+        <section id="section6" class="content-card">
+            <h2 class="section-title">6. YOLOv8 模型訓練</h2>
+
+            <div class="two-col mb-4">
+                <div>
+                    <h3 class="font-bold mb-3" style="color: var(--blue-accent);">訓練前置：XML → YOLO 格式轉換</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-3">
+                        原始標注為 Pascal VOC XML 格式，需轉換為 YOLOv8 所需的 <code>.txt</code> 格式。每行代表一個瑕疵物件，使用相對座標（0~1 範圍）。
+                    </p>
+                    <div class="code-box" style="font-size: 0.75rem;">
+<span style="color: #8b949e"># YOLO label 格式：</span>
+<span style="color: #00ff9d">class_id  cx  cy  w  h</span>
+
+<span style="color: #8b949e"># 轉換公式：</span>
+cx = (xmin + xmax) / 2 / img_w
+cy = (ymin + ymax) / 2 / img_h
+w  = (xmax - xmin) / img_w
+h  = (ymax - ymin) / img_h
+
+<span style="color: #8b949e"># 類別對應（固定順序）：</span>
+0: missing_hole
+1: mouse_bite  
+2: open_circuit
+3: short
+4: spur
+5: spurious_copper
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-3" style="color: var(--blue-accent);">資料切分</h3>
+                    <div style="background: var(--bg-item); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; gap: 4px; height: 24px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                            <div style="background: #1a237e; width: 80%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: white;">Train 80%</div>
+                            <div style="background: #0f6e56; width: 10%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: white;">Val</div>
+                            <div style="background: #533; width: 10%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: white;">Test</div>
+                        </div>
+                        <div class="text-xs text-gray-400">Train: ~1109 張 ／ Val: ~139 張 ／ Test: ~138 張</div>
+                    </div>
+                    <h3 class="font-bold mb-2" style="color: var(--blue-accent);">訓練設定</h3>
+                    <table style="width:100%; font-size: 0.8rem;">
+                        <tr><td style="color: var(--text-muted); padding: 3px 0;">模型</td><td style="color: var(--text-main);">YOLOv8n（Nano）</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 3px 0;">輸入尺寸</td><td style="color: var(--text-main);">640 × 640</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 3px 0;">Batch size</td><td style="color: var(--text-main);">16</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 3px 0;">Epochs</td><td style="color: var(--text-main);">72（Early Stop）</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 3px 0;">Patience</td><td style="color: var(--text-main);">20 epochs</td></tr>
+                        <tr><td style="color: var(--text-muted); padding: 3px 0;">資料增強</td><td style="color: var(--text-main);">Mosaic, Mixup, Flip</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <h3 class="font-bold mb-3" style="color: var(--blue-accent);">訓練結果指標</h3>
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-value">91.9%</div>
+                    <div class="stat-label">mAP@0.5</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">48.4%</div>
+                    <div class="stat-label">mAP@0.5:0.95</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">92.4%</div>
+                    <div class="stat-label">Precision</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">88.5%</div>
+                    <div class="stat-label">Recall</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">72 ep.</div>
+                    <div class="stat-label">訓練 Epochs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">Early</div>
+                    <div class="stat-label">Stop 觸發</div>
+                </div>
+            </div>
+
+            <div class="success-box mt-4">
+                <strong style="color: var(--neon-green)">訓練收斂分析：</strong>
+                mAP@0.5 從第 1 epoch 的 0% 穩定提升至第 72 epoch 的 91.9%，訓練 loss 與 validation loss 同步下降且無過擬合現象，Early Stop 在 Patience 耗盡後正常停止。mAP@0.5:0.95 為 48.4%，顯示對嚴格 IoU 門檻的偵測仍有進步空間（小型瑕疵特性使然）。
+            </div>
+        </section>
+
+        <!-- Section 7：推論整合 -->
+        <section id="section7" class="content-card">
+            <h2 class="section-title">7. 推論整合策略</h2>
+            <p class="text-gray-300 mb-4">
+                XOR 與 YOLO 各有優勢，透過以下匹配邏輯將兩者結果合併：
+            </p>
+
+            <div class="code-box">
+<pre>def match_xor_to_yolo(xor_boxes, yolo_detections):
+    <span style="color: #8b949e">"""
+    對每個 XOR 候選框，找最匹配的 YOLO 偵測框：
+    條件：IoU >= 0.05  OR  中心點距離 <= 60px
+    """</span>
+    for xb in xor_boxes:
+        best = max(yolo_detections, key=lambda yb:
+            iou(xb, yb)  <span style="color: #8b949e"># 優先比 IoU</span>
+            if iou(xb, yb) >= 0.05
+            else (1 - center_dist(xb,yb)/60  <span style="color: #8b949e"># 次選距離</span>
+                  if center_dist(xb, yb) <= 60 else -1))
+        
+        if matched:   → <span style="color: #00c800">綠框</span>：採用 XOR 位置 + YOLO 種類
+        else:         → <span style="color: #ff4444">紅框</span>：XOR 有框，種類標 detected
+    
+    未匹配 YOLO 框   → <span style="color: #ff8800">橘框</span>：輕微瑕疵（純 YOLO）</pre>
+            </div>
+
+            <div class="info-box">
+                <strong style="color: var(--blue-accent)">為何使用中心點距離作為備用條件？</strong><br>
+                PCB 瑕疵尺寸極小（通常只有數十像素），兩個框只要稍有偏移 IoU 就會非常低甚至為 0。純粹依賴 IoU 會導致大量漏匹配。中心點距離 ≤ 60px 作為備用條件可有效補足這個問題。
+            </div>
+        </section>
+
+        <!-- Section 8：檢測結果 -->
+        <section id="section8" class="content-card">
+            <h2 class="section-title">8. 檢測結果展示</h2>
+            <p class="text-gray-300 mb-4">以下展示各 PCB 板型的代表性檢測結果，結果圖依板號分類儲存於 <code>PCB_RESULT/RESULT_xx/</code>：</p>
+
+            <!-- Tab 選擇 -->
+            <div class="result-tabs" id="tabBar">
+                <button class="tab-btn active" onclick="showBoard('01')">板型 01</button>
+                <button class="tab-btn" onclick="showBoard('04')">板型 04</button>
+                <button class="tab-btn" onclick="showBoard('05')">板型 05</button>
+                <button class="tab-btn" onclick="showBoard('06')">板型 06</button>
+                <button class="tab-btn" onclick="showBoard('07')">板型 07</button>
+                <button class="tab-btn" onclick="showBoard('08')">板型 08</button>
+                <button class="tab-btn" onclick="showBoard('09')">板型 09</button>
+                <button class="tab-btn" onclick="showBoard('10')">板型 10</button>
+                <button class="tab-btn" onclick="showBoard('11')">板型 11</button>
+                <button class="tab-btn" onclick="showBoard('12')">板型 12</button>
+            </div>
+
+            <!-- 結果圖展示區 -->
+            <div id="galleryArea">
+                <!-- 板型 01 -->
+                <div id="board-01" class="board-panel result-gallery">
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_missing_hole_16_result.jpg" alt="01 missing_hole_16" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">missing_hole</span> · 01_missing_hole_16</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_missing_hole_20_result.jpg" alt="01 missing_hole_20" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">missing_hole</span> · 01_missing_hole_20</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_mouse_bite_18_result.jpg" alt="01 mouse_bite_18" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">mouse_bite</span> · 01_mouse_bite_18</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_open_circuit_05_result.jpg" alt="01 open_circuit_05" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">open_circuit</span> · 01_open_circuit_05</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_open_circuit_12_result.jpg" alt="01 open_circuit_12" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">open_circuit</span> · 01_open_circuit_12</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_short_02_result.jpg" alt="01 short_02" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">short</span> · 01_short_02</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_short_04_result.jpg" alt="01 short_04" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">short</span> · 01_short_04</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_spurious_copper_02_result.jpg" alt="01 spurious_copper_02" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">spurious_copper</span> · 01_spurious_copper_02</div>
+                    </div>
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_01/01_spurious_copper_20_result.jpg" alt="01 spurious_copper_20" onerror="this.src='PCB_USED/01.JPG'">
+                        <div class="result-img-info"><span class="defect-type">spurious_copper</span> · 01_spurious_copper_20</div>
+                    </div>
+                </div>
+                <!-- 其他板型（動態生成） -->
+                <div id="board-04" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-05" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-06" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-07" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-08" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-09" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-10" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-11" class="board-panel result-gallery" style="display:none;"></div>
+                <div id="board-12" class="board-panel result-gallery" style="display:none;"></div>
+            </div>
+
+            <!-- Golden Sample 展示 -->
+            <h3 class="font-bold mt-6 mb-3" style="color: var(--blue-accent);">Golden Sample 標準板一覽</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.75rem;">
+                <div class="result-img-card"><img src="PCB_USED/01.JPG" alt="板型01" onerror="this.style.height='80px'"><div class="result-img-info">板型 01</div></div>
+                <div class="result-img-card"><img src="PCB_USED/04.JPG" alt="板型04" onerror="this.style.height='80px'"><div class="result-img-info">板型 04</div></div>
+                <div class="result-img-card"><img src="PCB_USED/05.JPG" alt="板型05" onerror="this.style.height='80px'"><div class="result-img-info">板型 05</div></div>
+                <div class="result-img-card"><img src="PCB_USED/06.JPG" alt="板型06" onerror="this.style.height='80px'"><div class="result-img-info">板型 06</div></div>
+                <div class="result-img-card"><img src="PCB_USED/07.JPG" alt="板型07" onerror="this.style.height='80px'"><div class="result-img-info">板型 07</div></div>
+                <div class="result-img-card"><img src="PCB_USED/08.JPG" alt="板型08" onerror="this.style.height='80px'"><div class="result-img-info">板型 08</div></div>
+                <div class="result-img-card"><img src="PCB_USED/09.JPG" alt="板型09" onerror="this.style.height='80px'"><div class="result-img-info">板型 09</div></div>
+                <div class="result-img-card"><img src="PCB_USED/10.JPG" alt="板型10" onerror="this.style.height='80px'"><div class="result-img-info">板型 10</div></div>
+                <div class="result-img-card"><img src="PCB_USED/11.JPG" alt="板型11" onerror="this.style.height='80px'"><div class="result-img-info">板型 11</div></div>
+                <div class="result-img-card"><img src="PCB_USED/12.JPG" alt="板型12" onerror="this.style.height='80px'"><div class="result-img-info">板型 12</div></div>
+            </div>
+        </section>
+
+        <!-- Section 9：專題應用 -->
+        <section id="section9" class="content-card">
+            <h2 class="section-title">9. 專題應用</h2>
+            <p class="text-gray-300 mb-4">本系統的技術架構可延伸應用於以下工業場景：</p>
+            <div class="defect-grid">
+                <div class="defect-card">
+                    <div class="text-2xl mb-2">🏭</div>
+                    <div class="font-bold mb-1" style="color: var(--blue-accent);">AOI 自動光學檢測</div>
+                    <p class="text-xs text-gray-400">替代人工目視，在 SMT 生產線上即時對每片 PCB 進行瑕疵篩選，提升良率與生產效率。</p>
+                </div>
+                <div class="defect-card">
+                    <div class="text-2xl mb-2">📊</div>
+                    <div class="font-bold mb-1" style="color: var(--blue-accent);">製程品質分析</div>
+                    <p class="text-xs text-gray-400">透過 CSV 報告統計各類瑕疵的分佈與頻率，回饋製程工程師進行蝕刻、曝光等製程的參數優化。</p>
+                </div>
+                <div class="defect-card">
+                    <div class="text-2xl mb-2">🔬</div>
+                    <div class="font-bold mb-1" style="color: var(--blue-accent);">多板型適應</div>
+                    <p class="text-xs text-gray-400">系統支援多張 Golden Sample 並根據板號自動切換，可在同一條產線上檢測不同型號的 PCB。</p>
+                </div>
+                <div class="defect-card">
+                    <div class="text-2xl mb-2">🔄</div>
+                    <div class="font-bold mb-1" style="color: var(--blue-accent);">持續學習擴充</div>
+                    <p class="text-xs text-gray-400">新的瑕疵類型只需補充標注資料重新訓練 YOLOv8，不需修改 XOR 定位流程，維護成本低。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 10：課程對應 -->
+        <section id="section10" class="content-card">
+            <h2 class="section-title">10. 課程對應</h2>
+            <p class="text-gray-300 mb-4">本專題涵蓋機器視覺檢測課程中的以下核心知識點：</p>
+            <div class="two-col">
+                <div>
+                    <h3 class="font-bold mb-3" style="color: var(--blue-accent);">傳統影像處理</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>✦ <strong>濾波器</strong>：高斯模糊（Gaussian Blur）去除拍攝雜訊</li>
+                        <li>✦ <strong>閾值化</strong>：Otsu 自適應二值化，無需手動調參</li>
+                        <li>✦ <strong>形態學操作</strong>：Opening / Closing 的原理與應用</li>
+                        <li>✦ <strong>連通區域分析</strong>：ConnectedComponents 提取候選區域</li>
+                        <li>✦ <strong>差異比對法</strong>：absdiff 作為機器視覺檢測的核心方法</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-bold mb-3" style="color: var(--blue-accent);">深度學習與整合</h3>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>✦ <strong>物件偵測</strong>：YOLO 架構原理與 Anchor-Free 偵測</li>
+                        <li>✦ <strong>資料標注</strong>：Pascal VOC → YOLO 格式轉換</li>
+                        <li>✦ <strong>模型評估</strong>：mAP、Precision、Recall 指標解讀</li>
+                        <li>✦ <strong>IoU 計算</strong>：Intersection over Union 框比對原理</li>
+                        <li>✦ <strong>系統整合</strong>：傳統方法與深度學習的混合架構設計</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 11：心得與貢獻 -->
+        <section id="section11" class="content-card">
+            <h2 class="section-title">11. 心得與貢獻</h2>
+
+            <div class="bg-blue-900/20 p-6 rounded-lg border-l-4 border-blue-500 mb-6 italic text-gray-200 leading-relaxed">
+                "本專題讓我們深刻理解到，傳統機器視覺方法與深度學習並非競爭關係，而是互補的。XOR 差異比對能精準定位任何與標準板不同之處，但無法區分種類；YOLOv8 能辨識種類，但對極小瑕疵的定位不夠穩定。兩者結合，正好彌補各自的弱點，形成比單一方法更強大的檢測系統。"
+            </div>
+            
+        </section>
+
+        <!-- Section 12：參考資料 -->
+        <section id="section12" class="content-card">
+            <h2 class="section-title">12. 參考資料</h2>
+            <ul class="space-y-3 text-sm">
+                <li>
+                    <a href="https://www.kaggle.com/datasets/akhatova/pcb-defects" target="_blank" class="text-blue-400 hover:underline">
+                        📦 Kaggle — PCB Defects Dataset (akhatova)
+                    </a>
+                    <p class="text-gray-500 text-xs mt-1">本專題使用的主要資料集，1386 張 PCB 影像，6 種瑕疵類別，Pascal VOC XML 標注格式。</p>
+                </li>
+                <li>
+                    <a href="https://docs.ultralytics.com/" target="_blank" class="text-blue-400 hover:underline">
+                        🧠 Ultralytics — YOLOv8 Official Documentation
+                    </a>
+                    <p class="text-gray-500 text-xs mt-1">YOLOv8 模型架構、訓練 API、超參數設定與評估指標說明。</p>
+                </li>
+                <li>
+                    <a href="https://github.com/tangsanli5201/DeepPCB" target="_blank" class="text-blue-400 hover:underline">
+                        🔬 GitHub — DeepPCB Dataset
+                    </a>
+                    <p class="text-gray-500 text-xs mt-1">PCB 瑕疵檢測相關研究，差異比對法的工業實作參考。</p>
+                </li>
+                <li>
+                    <a href="https://docs.opencv.org/4.x/" target="_blank" class="text-blue-400 hover:underline">
+                        📷 OpenCV 4.x Documentation
+                    </a>
+                    <p class="text-gray-500 text-xs mt-1">影像預處理相關函式：absdiff、threshold、morphologyEx、connectedComponentsWithStats。</p>
+                </li>
+                <li>
+                    <a href="intro.html" class="text-blue-400 hover:underline">
+                        📚 本站機器視覺檢測講義
+                    </a>
+                    <p class="text-gray-500 text-xs mt-1">課程講義中的影像濾波、形態學、閾值化等基礎理論章節。</p>
+                </li>
+            </ul>
+        </section>
+
+    </main>
+</div>
+
+<footer>
+    <p class="text-gray-500 text-sm">© 2026 機器視覺檢測專題小組 ｜ 顏旭男教授指導</p>
+    <p class="text-gray-600 text-xs mt-1">PCB Defect Detection · XOR + YOLOv8 Hybrid System</p>
+</footer>
+
+<script>
+    // 側邊選單開關
+    function toggleMenu() {
+        const content = document.getElementById('sidebarContent');
+        const icon    = document.getElementById('menuIcon');
+        content.classList.toggle('collapsed');
+        icon.innerText = content.classList.contains('collapsed') ? '⌵ 專題報告' : '︿ 專題報告';
+    }
+
+    // 板型 Tab 切換
+    function showBoard(id) {
+        document.querySelectorAll('.board-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('board-' + id).style.display = 'grid';
+        event.target.classList.add('active');
+
+        // 動態填充（其他板型）
+        const panel = document.getElementById('board-' + id);
+        if (panel.children.length === 0) {
+            const defects = ['missing_hole','mouse_bite','open_circuit','short','spur','spurious_copper'];
+            const nums    = ['01','02','03','04','05'];
+            defects.forEach(d => {
+                nums.slice(0,3).forEach(n => {
+                    panel.innerHTML += `
+                    <div class="result-img-card">
+                        <img src="PCB_RESULT/RESULT_${id}/${id}_${d}_${n}_result.jpg"
+                             alt="${id} ${d} ${n}"
+                             style="width:100%;height:180px;object-fit:cover;display:block;"
+                             onerror="this.parentElement.style.display='none'">
+                        <div class="result-img-info">
+                            <span class="defect-type">${d}</span> · ${id}_${d}_${n}
+                        </div>
+                    </div>`;
+                });
+            });
+        }
+    }
+
+    // Active nav highlight on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navItems = document.querySelectorAll('.nav-item');
+    window.addEventListener('scroll', () => {
+        let cur = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 120) cur = s.id;
+        });
+        navItems.forEach(n => {
+            n.classList.toggle('active', n.getAttribute('href') === '#' + cur);
+        });
+    });
+</script>
+</body>
+</html>

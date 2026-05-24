@@ -1,0 +1,86 @@
+
+/* Global Transitions */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease-out;
+}
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Shutter Animation Container */
+.shutter-demo {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    height: 300px;
+    background: #000;
+    overflow: hidden;
+    border-radius: 12px;
+    margin: 20px auto;
+}
+
+.shutter-bar {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 0, 0.5);
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: none;
+}
+
+.shutter-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 0.3s;
+}
+
+.rolling-distort {
+    transform: skewX(10deg);
+}
+
+/* Filter Comparison Grid */
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.filter-card {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.filter-card img {
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+/* Lighting Mode Interactive */
+.lighting-interactive {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.light-source {
+    width: 20px;
+    height: 20px;
+    background: yellow;
+    border-radius: 50%;
+    box-shadow: 0 0 20px yellow;
+    position: absolute;
+    pointer-events: none;
+    transition: all 0.1s;
+}

@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像處理技術 - 機器視覺檢測</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/animations.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .nav-container {
+            background: rgba(15, 32, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .logo:hover {
+            color: #93c5fd;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #e5e7eb;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        .nav-links a.active {
+            color: #60a5fa;
+            background: rgba(96, 165, 250, 0.2);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: #60a5fa;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 4rem 2rem 3rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #93c5fd;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(96, 165, 250, 0.3);
+            box-shadow: 0 8px 32px rgba(96, 165, 250, 0.2);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-icon {
+            font-size: 2rem;
+        }
+
+        .subsection {
+            margin-bottom: 2rem;
+        }
+
+        .subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .subsection-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #93c5fd;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-list {
+            list-style: none;
+            padding-left: 1rem;
+        }
+
+        .content-list li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: #e5e7eb;
+            line-height: 1.6;
+        }
+
+        .content-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #60a5fa;
+            font-weight: 700;
+        }
+
+        .content-list li strong {
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        .nested-list {
+            margin-top: 0.5rem;
+            padding-left: 1.5rem;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(96, 165, 250, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .video-container:hover {
+            border-color: rgba(96, 165, 250, 0.5);
+            box-shadow: 0 12px 48px rgba(96, 165, 250, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 2px solid rgba(96, 165, 250, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .comparison-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #60a5fa;
+            transform: translateY(-8px);
+            box-shadow: 0 12px 48px rgba(96, 165, 250, 0.3);
+        }
+
+        .comparison-card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .comparison-item {
+            margin-bottom: 1rem;
+        }
+
+        .comparison-label {
+            font-weight: 600;
+            color: #93c5fd;
+            margin-bottom: 0.25rem;
+        }
+
+        .comparison-text {
+            color: #e5e7eb;
+            line-height: 1.6;
+        }
+
+
+        .filter-lab {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+            gap: 1.5rem;
+            align-items: stretch;
+        }
+
+        .filter-stage,
+        .segmentation-stage,
+        .color-stage {
+            position: relative;
+            min-height: 360px;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(96, 165, 250, 0.18);
+            background: linear-gradient(180deg, rgba(9, 14, 25, 0.95), rgba(30, 41, 59, 0.88));
+        }
+
+        .filter-stage::before,
+        .segmentation-stage::before,
+        .color-stage::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+        }
+
+        .filter-preview {
+            position: absolute;
+            inset: 18px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(148, 163, 184, 0.08));
+        }
+
+        .filter-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.35s ease;
+        }
+
+        .filter-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(96,165,250,0.22), transparent 22%, transparent 78%, rgba(34,197,94,0.22));
+            transform: translateX(-100%);
+            animation: filterSweep 4.5s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes filterSweep {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .filter-controls,
+        .segmentation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .filter-chip,
+        .segmentation-tab {
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(96, 165, 250, 0.18);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .filter-chip:hover,
+        .filter-chip.active,
+        .segmentation-tab:hover,
+        .segmentation-tab.active {
+            transform: translateY(-2px);
+            background: rgba(96, 165, 250, 0.16);
+            border-color: rgba(147, 197, 253, 0.42);
+        }
+
+        .filter-insight,
+        .segmentation-info,
+        .color-info {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(96, 165, 250, 0.14);
+            border-radius: 22px;
+            padding: 1.4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .signal-chart {
+            display: flex;
+            align-items: end;
+            gap: 12px;
+            height: 150px;
+            padding: 1rem;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        .signal-bar {
+            flex: 1;
+            border-radius: 14px 14px 6px 6px;
+            background: linear-gradient(180deg, rgba(96, 165, 250, 0.95), rgba(37, 99, 235, 0.35));
+            position: relative;
+            min-height: 18px;
+            transition: height 0.35s ease, background 0.35s ease;
+        }
+
+        .signal-bar span {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            white-space: nowrap;
+        }
+
+        .segmentation-canvas {
+            position: absolute;
+            inset: 24px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(226,232,240,0.08), rgba(51,65,85,0.22));
+        }
+
+        .seg-object,
+        .seg-mask,
+        .seg-seed,
+        .seg-ridge {
+            position: absolute;
+            transition: all 0.4s ease;
+        }
+
+        .seg-object.primary { left: 14%; top: 18%; width: 32%; height: 44%; border-radius: 26px; background: rgba(14, 165, 233, 0.28); border: 2px solid rgba(125, 211, 252, 0.7); }
+        .seg-object.secondary { right: 14%; top: 34%; width: 28%; height: 34%; border-radius: 999px; background: rgba(56, 189, 248, 0.16); border: 2px solid rgba(125, 211, 252, 0.48); }
+        .seg-mask { inset: 0; background: rgba(34, 197, 94, 0.18); clip-path: inset(100% 0 0 0); }
+        .seg-seed { width: 22px; height: 22px; border-radius: 999px; background: #fbbf24; left: 22%; top: 34%; box-shadow: 0 0 18px rgba(251,191,36,0.6); }
+        .seg-ridge { inset: 8% 8%; border: 2px dashed rgba(248,113,113,0.75); border-radius: 28px; opacity: 0; }
+
+        .segmentation-stage[data-mode="threshold"] .seg-mask {
+            clip-path: inset(34% 0 0 0);
+            animation: thresholdMask 2.8s ease-in-out infinite;
+        }
+
+        .segmentation-stage[data-mode="edge"] .seg-object {
+            background: transparent;
+            box-shadow: inset 0 0 0 2px rgba(251, 191, 36, 0.85), 0 0 28px rgba(251, 191, 36, 0.22);
+        }
+
+        .segmentation-stage[data-mode="region"] .seg-mask {
+            clip-path: circle(11% at 22% 36%);
+            animation: regionGrow 3s ease-in-out infinite;
+        }
+
+        .segmentation-stage[data-mode="region"] .seg-seed { opacity: 1; }
+
+        .segmentation-stage[data-mode="watershed"] .seg-ridge { opacity: 1; animation: ridgePulse 2.8s ease-in-out infinite; }
+
+        @keyframes thresholdMask {
+            0%, 100% { clip-path: inset(56% 0 0 0); }
+            50% { clip-path: inset(28% 0 0 0); }
+        }
+
+        @keyframes regionGrow {
+            0% { clip-path: circle(9% at 22% 36%); }
+            50% { clip-path: circle(34% at 27% 40%); }
+            100% { clip-path: circle(9% at 22% 36%); }
+        }
+
+        @keyframes ridgePulse {
+            0%, 100% { transform: scale(0.98); opacity: 0.55; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+
+        .color-columns {
+            position: absolute;
+            inset: 24px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .color-channel,
+        .quality-meter {
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(15,23,42,0.4);
+        }
+
+        .channel-gradient {
+            height: 72%;
+            animation: colorShift 3.8s ease-in-out infinite;
+        }
+
+        .channel-label {
+            padding: 0.9rem;
+            text-align: center;
+            color: #dbeafe;
+        }
+
+        .quality-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .quality-meter {
+            padding: 1rem;
+        }
+
+        .quality-track {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.1);
+            overflow: hidden;
+            margin-top: 0.55rem;
+        }
+
+        .quality-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #38bdf8, #34d399);
+            transition: width 0.35s ease;
+        }
+
+        @keyframes colorShift {
+            0%, 100% { filter: saturate(0.8) brightness(0.9); }
+            50% { filter: saturate(1.25) brightness(1.05); }
+        }
+
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .pdf-button {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .pdf-button:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(37, 99, 235, 0.4);
+            border-color: #60a5fa;
+        }
+
+        .pdf-icon {
+            font-size: 1.5rem;
+        }
+
+        .footer {
+            background: rgba(15, 32, 39, 0.95);
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            color: #93c5fd;
+        }
+
+        .kuse-branding {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            color: #60a5fa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .kuse-branding:hover {
+            color: #93c5fd;
+            transform: translateY(-2px);
+        }
+
+        .kuse-branding svg {
+            height: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .kuse-branding:hover svg {
+            transform: scale(1.1);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(15, 32, 39, 0.98);
+                flex-direction: column;
+                padding: 1rem;
+                gap: 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links a {
+                padding: 1rem;
+                border-radius: 8px;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pdf-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-lab,
+            .quality-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-container">
+        <div class="nav-wrapper">
+            <a href="index.html" class="logo">機器視覺檢測</a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">首頁</a></li>
+                <li><a href="intro.html">機器視覺簡介</a></li>
+                <li><a href="imaging.html">取像模組</a></li>
+                <li><a href="lighting.html">光源照明</a></li>
+                <li><a href="processing.html" class="active">影像處理</a></li>
+                <li><a href="application.html">檢測應用</a></li>
+                <li><a href="project.html">專題報告</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="hero-icon">🎨</div>
+        <h1 class="hero-title">影像處理技術</h1>
+        <p class="hero-subtitle">Image Processing</p>
+    </div>
+
+    <div class="content-container">
+        <!-- 影像濾波器互動對比 -->
+        <div class="section reveal">
+            <h2 class="section-title">
+                <span class="section-icon">🔍</span>
+                影像濾波器互動對比 (Filtering Comparison)
+            </h2>
+            <div class="section-content">
+                <p class="mb-6">所有常見濾波器都可在同一個互動實驗台中比較。點擊下方濾波器，會同步更新動畫預覽與效果圖表。</p>
+                <div class="filter-lab">
+                    <div>
+                        <div class="filter-stage">
+                            <div class="filter-preview">
+                                <img src="https://api.kuse.ai/api/folder/v1/file/49443986d1c12d7aff457b397c22c9c28deda32c711021cf617f8526b8fad208_6827123.jpeg" id="filterResult">
+                                <div class="filter-overlay"></div>
+                            </div>
+                        </div>
+                        <div class="filter-controls">
+                            <button class="filter-chip active" data-filter="mean">均值</button>
+                            <button class="filter-chip" data-filter="gaussian">高斯</button>
+                            <button class="filter-chip" data-filter="median">中值</button>
+                            <button class="filter-chip" data-filter="laplacian">Laplacian</button>
+                            <button class="filter-chip" data-filter="sobel">Sobel</button>
+                            <button class="filter-chip" data-filter="prewitt">Prewitt</button>
+                            <button class="filter-chip" data-filter="canny">Canny</button>
+                            <button class="filter-chip" data-filter="roberts">Roberts</button>
+                            <button class="filter-chip" data-filter="lowpass">低通</button>
+                            <button class="filter-chip" data-filter="highpass">高通</button>
+                        </div>
+                    </div>
+                    <div class="filter-insight" id="filterInsight">
+                        <h4 class="text-2xl font-bold text-blue-300" id="filterLabel">均值濾波器</h4>
+                        <p class="text-gray-300" id="filterDescription">用鄰域平均值平滑高頻噪聲，畫面會變柔和，但邊緣也會被一起抹平。</p>
+                        <div class="signal-chart">
+                            <div class="signal-bar" id="chartNoise"><span>降噪</span></div>
+                            <div class="signal-bar" id="chartEdge"><span>邊緣保留</span></div>
+                            <div class="signal-bar" id="chartContrast"><span>對比強化</span></div>
+                            <div class="signal-bar" id="chartSpeed"><span>運算速度</span></div>
+                        </div>
+                        <p class="text-sm text-slate-300" id="filterNote">圖表越高代表該濾波器在該指標上的表現越明顯，可快速比較不同方法適合的 AOI 任務。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-icon">🔍</span>
+                影像空間濾波
+            </h2>
+            
+            <div class="subsection">
+                <h3 class="subsection-title">📊 平滑濾波器 (Smoothing Filters)</h3>
+                <ul class="content-list">
+                    <li><strong>均值濾波器 (Mean Filter)</strong> - 使用鄰域像素的平均值替換中心像素</li>
+                    <li><strong>高斯濾波器 (Gaussian Filter)</strong> - 基於高斯分布的加權平均濾波</li>
+                    <li><strong>中值濾波器 (Median Filter)</strong> - 使用鄰域像素的中值替換中心像素</li>
+                    <li class="nested-list"><strong>用途：</strong>降噪處理、模糊效果、平滑影像邊緣</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">⚡ 銳化濾波器 (Sharpening Filters)</h3>
+                <ul class="content-list">
+                    <li><strong>Laplacian 算子</strong> - 二階導數算子，對邊緣敏感</li>
+                    <li><strong>Sobel 算子</strong> - 一階導數算子，計算水平和垂直方向梯度</li>
+                    <li><strong>Prewitt 算子</strong> - 類似Sobel，使用不同的權重係數</li>
+                    <li class="nested-list"><strong>用途：</strong>邊緣增強、細節突出、影像清晰化</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">🎯 邊緣檢測 (Edge Detection)</h3>
+                <ul class="content-list">
+                    <li><strong>Canny 邊緣檢測</strong> - 多階段演算法，包含高斯平滑、梯度計算、非極大值抑制和雙閾值檢測</li>
+                    <li><strong>Roberts 算子</strong> - 簡單的對角線方向梯度算子</li>
+                    <li class="nested-list"><strong>用途：</strong>輪廓提取、特徵識別、物體分割</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-icon">📡</span>
+                影像頻率濾波
+            </h2>
+            
+            <div class="subsection">
+                <h3 class="subsection-title">🌊 傅立葉轉換 (Fourier Transform)</h3>
+                <ul class="content-list">
+                    <li>將影像從空間域轉換到頻率域</li>
+                    <li>分析影像的頻率成分和週期性特徵</li>
+                    <li>低頻成分代表影像的整體亮度變化</li>
+                    <li>高頻成分代表影像的細節和邊緣資訊</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">⬇️ 低通濾波器 (Low-Pass Filter)</h3>
+                <ul class="content-list">
+                    <li>保留低頻成分，去除高頻噪聲</li>
+                    <li><strong>理想低通濾波器</strong> - 截止頻率內完全通過，外部完全阻斷</li>
+                    <li><strong>巴特沃斯低通濾波器</strong> - 平滑過渡，無振鈴效應</li>
+                    <li><strong>高斯低通濾波器</strong> - 基於高斯函數，平滑過渡特性</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">⬆️ 高通濾波器 (High-Pass Filter)</h3>
+                <ul class="content-list">
+                    <li>保留高頻成分，增強邊緣和細節</li>
+                    <li><strong>理想高通濾波器</strong> - 截止頻率外完全通過，內部完全阻斷</li>
+                    <li><strong>巴特沃斯高通濾波器</strong> - 平滑過渡特性</li>
+                    <li><strong>高斯高通濾波器</strong> - 基於高斯函數的高通特性</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">⚖️ 空間濾波 vs 頻率濾波</h3>
+                <ul class="content-list">
+                    <li><strong>空間濾波：</strong>直接在像素域操作，計算簡單直觀</li>
+                    <li><strong>頻率濾波：</strong>在頻率域操作，適合處理週期性噪聲和頻率分析</li>
+                    <li>空間濾波適用於局部特徵處理</li>
+                    <li>頻率濾波適用於全局頻率特性調整</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-icon">✂️</span>
+                影像分割技術
+            </h2>
+            <div class="filter-lab mb-8">
+                <div>
+                    <div class="segmentation-stage" id="segmentationStage" data-mode="threshold">
+                        <div class="segmentation-canvas">
+                            <div class="seg-object primary"></div>
+                            <div class="seg-object secondary"></div>
+                            <div class="seg-mask"></div>
+                            <div class="seg-seed"></div>
+                            <div class="seg-ridge"></div>
+                        </div>
+                    </div>
+                    <div class="segmentation-tabs">
+                        <button class="segmentation-tab active" data-segmentation="threshold">閾值分割</button>
+                        <button class="segmentation-tab" data-segmentation="edge">邊緣分割</button>
+                        <button class="segmentation-tab" data-segmentation="region">區域生長</button>
+                        <button class="segmentation-tab" data-segmentation="watershed">分水嶺</button>
+                    </div>
+                </div>
+                <div class="segmentation-info" id="segmentationInfo">
+                    <h4 class="text-2xl font-bold text-blue-300" id="segmentationTitle">閾值分割</h4>
+                    <p class="text-gray-300" id="segmentationDescription">以亮度門檻把前景和背景切開，當目標和背景差異大時，是最快速也最常見的 AOI 分割方法。</p>
+                    <div class="source-metrics">
+                        <div class="source-metric"><strong class="text-blue-300 block mb-1">分割方式</strong><span id="segmentationMethod">用單一或局部閾值決定像素屬於前景或背景。</span></div>
+                        <div class="source-metric"><strong class="text-blue-300 block mb-1">適合場景</strong><span id="segmentationBest">背光輪廓、焊點、黑白對比明顯的標記。</span></div>
+                        <div class="source-metric"><strong class="text-blue-300 block mb-1">動畫重點</strong><span id="segmentationVisual">綠色遮罩由上往下擴張，模擬閾值切割結果。</span></div>
+                        <div class="source-metric"><strong class="text-blue-300 block mb-1">限制</strong><span id="segmentationLimit">照明不均時容易誤切，需要自適應方法補強。</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="subsection">
+                <h3 class="subsection-title">🎚️ 閾值分割 (Thresholding)</h3>
+                <ul class="content-list">
+                    <li><strong>全域閾值</strong> - 使用單一閾值對整幅影像進行分割</li>
+                    <li><strong>自適應閾值</strong> - 根據局部區域特性動態調整閾值</li>
+                    <li><strong>Otsu 方法</strong> - 自動選擇最佳閾值，最大化類間方差</li>
+                    <li>適用於前景與背景對比明顯的影像</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">🔲 邊緣檢測分割</h3>
+                <ul class="content-list">
+                    <li><strong>基於邊緣檢測的分割</strong> - 利用邊緣資訊進行區域劃分</li>
+                    <li><strong>邊緣連接與追蹤</strong> - 將檢測到的邊緣點連接成完整輪廓</li>
+                    <li>結合多種邊緣檢測算子提高準確性</li>
+                    <li>適用於物體輪廓清晰的場景</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">🌱 區域生長 (Region Growing)</h3>
+                <ul class="content-list">
+                    <li>從種子點開始生長，逐步擴展區域</li>
+                    <li>根據相似性準則（如灰度值、顏色、紋理）合併相鄰像素</li>
+                    <li>適用於同質區域的分割</li>
+                    <li>需要合理選擇種子點和相似性閾值</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">💧 分水嶺演算法 (Watershed)</h3>
+                <ul class="content-list">
+                    <li>將影像視為地形圖，灰度值代表海拔高度</li>
+                    <li>從最低點（區域極小值）開始淹沒</li>
+                    <li>不同區域的水相遇處形成分水嶺，即為分割邊界</li>
+                    <li>適用於分割相互接觸的物體</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-icon">🎨</span>
+                彩色成像品質優化
+            </h2>
+            <div class="filter-lab mb-8">
+                <div class="color-stage">
+                    <div class="color-columns">
+                        <div class="color-channel">
+                            <div class="channel-gradient" style="background: linear-gradient(180deg, #f87171, #7f1d1d);"></div>
+                            <div class="channel-label">R 通道</div>
+                        </div>
+                        <div class="color-channel">
+                            <div class="channel-gradient" style="background: linear-gradient(180deg, #4ade80, #14532d); animation-delay:0.4s;"></div>
+                            <div class="channel-label">G 通道</div>
+                        </div>
+                        <div class="color-channel">
+                            <div class="channel-gradient" style="background: linear-gradient(180deg, #60a5fa, #172554); animation-delay:0.8s;"></div>
+                            <div class="channel-label">B 通道</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="color-info">
+                    <h4 class="text-2xl font-bold text-blue-300">彩色成像優化動畫</h4>
+                    <p class="text-gray-300">透過白平衡、色彩矩陣與飽和度控制，讓三個通道的訊號重新校準，提升 AOI 對色差、印刷偏色與表面污染的判讀能力。</p>
+                    <div class="quality-grid">
+                        <div class="quality-meter">
+                            <div class="text-sm text-slate-300">白平衡一致性</div>
+                            <div class="quality-track"><div class="quality-fill" id="whiteBalanceFill" style="width: 86%;"></div></div>
+                        </div>
+                        <div class="quality-meter">
+                            <div class="text-sm text-slate-300">色彩對比</div>
+                            <div class="quality-track"><div class="quality-fill" id="colorContrastFill" style="width: 92%;"></div></div>
+                        </div>
+                        <div class="quality-meter">
+                            <div class="text-sm text-slate-300">飽和度穩定</div>
+                            <div class="quality-track"><div class="quality-fill" id="saturationFill" style="width: 78%;"></div></div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-300">動畫會讓 RGB 三通道交替增益，模擬色彩校正前後的訊號平衡過程。</p>
+                </div>
+            </div>
+            
+            <div class="subsection">
+                <h3 class="subsection-title">🎨 色彩空間轉換</h3>
+                <ul class="content-list">
+                    <li><strong>RGB</strong> - 紅(Red)、綠(Green)、藍(Blue)三原色加色模型</li>
+                    <li><strong>HSV</strong> - 色相(Hue)、飽和度(Saturation)、明度(Value)，更符合人類視覺感知</li>
+                    <li><strong>Lab</strong> - 感知均勻色彩空間，L表示亮度，a和b表示色度</li>
+                    <li>不同色彩空間適用於不同的影像處理任務</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">⚖️ 白平衡 (White Balance)</h3>
+                <ul class="content-list">
+                    <li>校正不同光源造成的色溫偏差</li>
+                    <li><strong>灰度世界算法</strong> - 假設影像平均灰度為中性灰</li>
+                    <li><strong>完美反射算法</strong> - 假設影像中最亮的區域為白色</li>
+                    <li>確保白色物體在不同光源下呈現真實的白色</li>
+                </ul>
+            </div>
+
+            <div class="subsection">
+                <h3 class="subsection-title">🔧 色彩校正 (Color Correction)</h3>
+                <ul class="content-list">
+                    <li><strong>色彩矩陣變換</strong> - 使用3×3矩陣調整RGB通道關係</li>
+                    <li><strong>伽馬校正</strong> - 調整影像的亮度曲線，補償顯示設備的非線性特性</li>
+                    <li><strong>色彩增強</strong> - 提高色彩飽和度和對比度</li>
+                    <li>使影像色彩更加鮮豔、真實和符合視覺期望</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-icon">⚖️</span>
+                影像空間濾波 vs 頻率濾波
+            </h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <h3 class="comparison-card-title">🔍 空間濾波</h3>
+                    <div class="comparison-item">
+                        <div class="comparison-label">✅ 優點</div>
+                        <div class="comparison-text">計算簡單、直觀易懂、實現容易</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">❌ 缺點</div>
+                        <div class="comparison-text">處理週期性噪聲效果差、難以進行頻率分析</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">🎯 適用場景</div>
+                        <div class="comparison-text">一般降噪處理、邊緣檢測、局部特徵增強</div>
+                    </div>
+                </div>
+
+                <div class="comparison-card">
+                    <h3 class="comparison-card-title">📡 頻率濾波</h3>
+                    <div class="comparison-item">
+                        <div class="comparison-label">✅ 優點</div>
+                        <div class="comparison-text">處理週期性噪聲效果好、便於頻率域分析</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">❌ 缺點</div>
+                        <div class="comparison-text">計算複雜、需要進行傅立葉轉換和反轉換</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">🎯 適用場景</div>
+                        <div class="comparison-text">週期性噪聲去除、頻率特性分析、全局濾波</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-icon">📚</span>
+                相關PDF講義
+            </h2>
+            
+            <div class="pdf-grid">
+                <a href="#" class="pdf-button" onclick="alert(`影像空間濾波KM.pdf (檔案ID: 2799614)`); return false;">
+                    <span class="pdf-icon">📄</span>
+                    <span>影像空間濾波KM.pdf</span>
+                </a>
+                <a href="#" class="pdf-button" onclick="alert(`影像分割KM1.pdf (檔案ID: 2799620)`); return false;">
+                    <span class="pdf-icon">📄</span>
+                    <span>影像分割KM1.pdf</span>
+                </a>
+                <a href="#" class="pdf-button" onclick="alert(`彩色成像品質的優化KM.pdf (檔案ID: 2799612)`); return false;">
+                    <span class="pdf-icon">📄</span>
+                    <span>彩色成像品質的優化KM.pdf</span>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 機器視覺檢測課程. All rights reserved.</p>
+            <a href="https://kuse.ai" target="_blank" class="kuse-branding">
+                <span>made with</span>
+                <svg viewBox="0,0,160,44" xmlns="http://www.w3.org/2000/svg"><path d="m.01,20.65C-.43,8.25,9.3-2.03,22.04.34,34.78,2.72,43.29,8.32,43.29,22.9s-8.66,19.01-22.03,20.3C7.9,44.5.46,33.05.01,20.65z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="m146.76,7.94c8.07,0,13.24,6.15,13.24,14.58v1.39h-20.75c.45,4.05,3.51,7.37,8.57,7.37,2.62,0,5.73-1.05,7.62-2.94l2.67,3.83c-2.67,2.55-6.62,3.88-10.9,3.88-8.07,0-14.08-5.6-14.08-14.08,0-7.76,5.67-14.02,13.63-14.02zm0,4.77c-5.01,0-7.29,3.83-7.57,7.1h15.13c-.11-3.16-2.28-7.1-7.57-7.1z" fill="currentColor"/><path d="m86.64,24.49c0,4.15,2.39,6.84,6.84,6.84,4.4,0,6.84-2.69,6.84-6.84V8.55h5.37v16.33c0,6.7-4.06,11.14-12.21,11.14-8.21,0-12.21-4.5-12.21-11.09V8.55h5.37v15.94zm32.99-16.55c4.49,0,8.06,1.47,10.6,3.86l-2.59,3.81c-2.05-2-5.28-3.08-8.06-3.08-2.88,0-4.84,1.37-4.84,3.32,0,1.91,2.64,2.54,5.81,3.27,4.59,1.08,10.26,2.4,10.26,8.46,0,4.94-3.76,8.41-11.14,8.41-4.98,0-8.94-1.76-11.24-4.11l2.54-4.11c1.86,1.91,5.18,3.67,8.84,3.67,3.91,0,5.57-1.66,5.57-3.62,0-2.3-2.88-2.98-6.21-3.76-4.54-1.08-9.87-2.3-9.87-8.06,0-4.5,4.2-8.06,10.31-8.06zM60.79,20.82,71.44,8.55h6.5L66.46,21.26,78.82,35.44h-6.5l-9.28-11.1-2.25,2.49v8.6h-5.33V8.55h5.33v12.27z" fill="currentColor"/></svg>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        const filterConfigs = {
+            mean: {
+                label: '均值濾波器',
+                description: '用鄰域平均值平滑高頻噪聲，畫面會變柔和，但邊緣也會被一起抹平。',
+                filter: 'blur(3px) brightness(1.02)',
+                metrics: [82, 42, 30, 92],
+                note: '適合先快速壓低雜訊，但不適合保留精細邊界。'
+            },
+            gaussian: {
+                label: '高斯濾波器',
+                description: '權重更自然的平滑方式，常作為去噪與邊緣偵測前的標準預處理。',
+                filter: 'blur(4px) saturate(0.95)',
+                metrics: [88, 56, 34, 82],
+                note: '對隨機噪聲很有效，且比均值濾波更不容易產生明顯方塊感。'
+            },
+            median: {
+                label: '中值濾波器',
+                description: '保留輪廓的同時去除椒鹽噪聲，是 AOI 前處理常見的穩健選擇。',
+                filter: 'contrast(1.05) saturate(0.9)',
+                metrics: [84, 74, 42, 72],
+                note: '對孤立亮點、髒污與小面積異常特別有效。'
+            },
+            laplacian: {
+                label: 'Laplacian 銳化',
+                description: '用二階導數強調灰階急遽變化的位置，能把輪廓與細節拉出來。',
+                filter: 'contrast(1.55) brightness(1.08)',
+                metrics: [28, 90, 76, 68],
+                note: '細節明顯，但也會把噪聲一起放大，需要先搭配平滑處理。'
+            },
+            sobel: {
+                label: 'Sobel 邊緣',
+                description: '計算水平與垂直梯度，適合找出邊界方向與邊緣強度。',
+                filter: 'grayscale(1) contrast(2) brightness(1.12)',
+                metrics: [38, 88, 72, 74],
+                note: '在定位、輪廓量測與特徵提取前很常見。'
+            },
+            prewitt: {
+                label: 'Prewitt 邊緣',
+                description: '與 Sobel 類似，但權重更平均，能快速強調輪廓區域。',
+                filter: 'grayscale(1) contrast(1.85) brightness(1.08)',
+                metrics: [36, 82, 68, 80],
+                note: '實作簡單，適合對運算量敏感的即時檢測流程。'
+            },
+            canny: {
+                label: 'Canny 邊緣檢測',
+                description: '多階段邊緣演算法，能保留細邊界又壓抑雜訊，是最常見的高品質輪廓法。',
+                filter: 'grayscale(1) contrast(2.2) brightness(1.18)',
+                metrics: [64, 95, 82, 58],
+                note: '適合要求輪廓完整性的 AOI，例如尺寸測量與缺陷描邊。'
+            },
+            roberts: {
+                label: 'Roberts 算子',
+                description: '以對角線差分偵測灰階變化，能快速捕捉尖銳轉折。',
+                filter: 'grayscale(1) contrast(1.7) brightness(1.04)',
+                metrics: [24, 76, 58, 88],
+                note: '速度快但抗噪較弱，多用在簡潔邊界或教學展示。'
+            },
+            lowpass: {
+                label: '低通濾波',
+                description: '保留低頻輪廓、削弱高頻細節，適合去週期性細噪與平滑亮度起伏。',
+                filter: 'blur(5px) saturate(0.82) brightness(1.04)',
+                metrics: [92, 34, 26, 64],
+                note: '能穩定大範圍亮度分布，但精細缺陷可能會被壓掉。'
+            },
+            highpass: {
+                label: '高通濾波',
+                description: '強調高頻資訊，把邊緣、紋理與細微缺陷凸顯出來。',
+                filter: 'contrast(1.95) brightness(1.12) saturate(1.1)',
+                metrics: [18, 94, 86, 60],
+                note: '適合找微刮痕、細線與紋理，但要留意噪聲也會被放大。'
+            }
+        };
+
+        const segmentationConfigs = {
+            threshold: {
+                title: '閾值分割',
+                description: '以亮度門檻把前景和背景切開，當目標和背景差異大時，是最快速也最常見的 AOI 分割方法。',
+                method: '用單一或局部閾值決定像素屬於前景或背景。',
+                best: '背光輪廓、焊點、黑白對比明顯的標記。',
+                visual: '綠色遮罩由上往下擴張，模擬閾值切割結果。',
+                limit: '照明不均時容易誤切，需要自適應方法補強。'
+            },
+            edge: {
+                title: '邊緣檢測分割',
+                description: '先找出灰階急遽變化的邊界，再連成輪廓，是定位幾何外形的常用方式。',
+                method: '利用梯度與邊界連接將物體輪廓描出。',
+                best: '輪廓鮮明的零件、字符與孔位檢測。',
+                visual: '物件邊界轉為發亮描線，突顯輪廓位置。',
+                limit: '若表面紋理太強或噪聲過多，易出現斷裂邊界。'
+            },
+            region: {
+                title: '區域生長',
+                description: '從種子點開始向外擴張，把相似灰度或顏色的像素逐步併入同一區域。',
+                method: '依相似性閾值讓區域從核心往外生長。',
+                best: '表面均勻、顏色連續的物件或膠材塗佈區域。',
+                visual: '黃色種子點向外擴張成綠色區塊。',
+                limit: '種子點與閾值設定不當時，容易過度或不足分割。'
+            },
+            watershed: {
+                title: '分水嶺演算法',
+                description: '把影像看成地形圖，從低窪處注水，交會線就是物體之間的分界。',
+                method: '用地形概念切開相互接觸的區域。',
+                best: '接觸顆粒、膠點、封裝元件或堆疊物件。',
+                visual: '紅色虛線脈動，代表分水嶺邊界形成。',
+                limit: '容易過度分割，通常要先搭配平滑或標記控制。'
+            }
+        };
+
+        function setFilter(filterKey) {
+            const config = filterConfigs[filterKey];
+            if (!config) return;
+            const img = document.getElementById('filterResult');
+            document.getElementById('filterLabel').textContent = config.label;
+            document.getElementById('filterDescription').textContent = config.description;
+            document.getElementById('filterNote').textContent = config.note;
+            gsap.to(img, { filter: config.filter, duration: 0.35, ease: 'power2.out' });
+            [ 'chartNoise', 'chartEdge', 'chartContrast', 'chartSpeed' ].forEach((id, index) => {
+                const value = config.metrics[index];
+                gsap.to(`#${id}`, { height: `${value}%`, duration: 0.45, ease: 'power2.out' });
+            });
+            document.querySelectorAll('.filter-chip').forEach((chip) => chip.classList.toggle('active', chip.dataset.filter === filterKey));
+            gsap.fromTo('#filterInsight', { y: 10, opacity: 0.6 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' });
+        }
+
+        function setSegmentation(mode) {
+            const config = segmentationConfigs[mode];
+            if (!config) return;
+            document.getElementById('segmentationStage').dataset.mode = mode;
+            document.getElementById('segmentationTitle').textContent = config.title;
+            document.getElementById('segmentationDescription').textContent = config.description;
+            document.getElementById('segmentationMethod').textContent = config.method;
+            document.getElementById('segmentationBest').textContent = config.best;
+            document.getElementById('segmentationVisual').textContent = config.visual;
+            document.getElementById('segmentationLimit').textContent = config.limit;
+            document.querySelectorAll('.segmentation-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.segmentation === mode));
+            gsap.fromTo('#segmentationInfo', { y: 10, opacity: 0.6 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.filter-chip').forEach((chip) => {
+                chip.addEventListener('click', () => setFilter(chip.dataset.filter));
+            });
+            document.querySelectorAll('.segmentation-tab').forEach((tab) => {
+                tab.addEventListener('click', () => setSegmentation(tab.dataset.segmentation));
+            });
+            setFilter('mean');
+            setSegmentation('threshold');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('active');
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        const mobileMenuBtn = document.getElementById(`mobileMenuBtn`);
+        const navLinks = document.getElementById(`navLinks`);
+
+        mobileMenuBtn.addEventListener(`click`, () => {
+            navLinks.classList.toggle(`active`);
+            mobileMenuBtn.textContent = navLinks.classList.contains(`active`) ? `✕` : `☰`;
+        });
+
+        window.addEventListener(`resize`, () => {
+            if (window.innerWidth > 768) {
+                navLinks.classList.remove(`active`);
+                mobileMenuBtn.textContent = `☰`;
+            }
+        });
+
+        document.querySelectorAll(`.nav-links a`).forEach(link => {
+            link.addEventListener(`click`, () => {
+                if (window.innerWidth <= 768) {
+                    navLinks.classList.remove(`active`);
+                    mobileMenuBtn.textContent = `☰`;
+                }
+            });
+        });
+    </script>
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+</body>
+</html>

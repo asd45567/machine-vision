@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>檢測應用 - 機器視覺檢測</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+        }
+
+        /* Header Section */
+        .page-header {
+            text-align: center;
+            padding: 4rem 0 3rem 0;
+        }
+
+        .page-header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .page-header .subtitle {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            border-radius: 2px;
+        }
+
+        /* --- 全新設計的 AOI 動畫展示區塊 --- */
+        .aoi-lab {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+            gap: 2rem;
+            align-items: stretch;
+        }
+
+        .aoi-stage {
+            position: relative;
+            min-height: 460px;
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: linear-gradient(180deg, rgba(10,16,32,0.95), rgba(30,41,59,0.85));
+        }
+
+        .aoi-stage::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 26px 26px;
+            pointer-events: none;
+        }
+
+        /* 全域掃描光條 */
+        .global-scanner {
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: #60a5fa;
+            box-shadow: 0 0 12px #60a5fa, 0 2px 8px rgba(96,165,250,0.6);
+            z-index: 20;
+            opacity: 0;
+        }
+        .scanner-beam {
+            position: absolute; top: 0; left: 0; right: 0; height: 100px;
+            background: linear-gradient(to bottom, rgba(96,165,250,0.3), transparent);
+            pointer-events: none;
+        }
+
+        /* 檢測機台基底 */
+        .inspection-board {
+            position: absolute;
+            inset: 15% 10% 10%;
+            border-radius: 16px;
+            background: linear-gradient(180deg, rgba(15,23,42,0.6), rgba(51,65,85,0.6));
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 動態場景容器 */
+        .aoi-subject {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .aoi-subject.active {
+            opacity: 1;
+        }
+
+        /* 定位框與瑕疵標記 (共用) */
+        .local-box {
+            position: absolute;
+            border: 2px dashed #34d399; /* 綠色定位框 */
+            box-shadow: 0 0 12px rgba(52,211,153,0.3), inset 0 0 8px rgba(52,211,153,0.1);
+            border-radius: 4px;
+            z-index: 10;
+        }
+        .local-marker {
+            position: absolute;
+            border: 2px solid #ef4444; /* 紅色瑕疵框 */
+            box-shadow: 0 0 15px rgba(239,68,68,0.5), inset 0 0 10px rgba(239,68,68,0.2);
+            border-radius: 50%;
+            z-index: 15;
+        }
+        @keyframes defectPulseObj {
+            0%, 100% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+        .local-marker.active {
+            animation: defectPulseObj 1.5s infinite;
+        }
+
+        /* --- 1. PCB檢測 場景 --- */
+        .subj-pcb .board { width: 65%; height: 60%; background: #064e3b; border: 2px solid #047857; border-radius: 8px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .subj-pcb .trace { position: absolute; width: 100%; height: 2px; background: #10b981; top: 45%; opacity: 0.4; }
+        .subj-pcb .chip { position: absolute; width: 35%; height: 45%; background: #1e293b; left: 15%; top: 25%; border-radius: 4px; box-shadow: 0 0 0 2px #64748b; }
+        .subj-pcb .pad { position: absolute; width: 16px; height: 16px; background: #cbd5e1; border-radius: 50%; right: 20%; }
+        .subj-pcb .pad-1 { top: 25%; }
+        .subj-pcb .pad-2 { top: 55%; background: #334155; box-shadow: inset 2px 2px 5px rgba(0,0,0,0.8); } /* 缺件/冷焊瑕疵 */
+        .subj-pcb .local-box { inset: 15% auto auto 10%; width: 45%; height: 65%; }
+        .subj-pcb .local-marker { right: 12%; top: 50%; width: 32px; height: 32px; border-radius: 50%; }
+
+        /* --- 2. 半導體檢測 場景 --- */
+        .subj-semi .wafer { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #f1f5f9, #94a3b8); position: relative; overflow: hidden; border: 3px solid #cbd5e1; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.4); }
+        .subj-semi .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(71,85,105,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(71,85,105,0.3) 1px, transparent 1px); background-size: 16px 16px; }
+        .subj-semi .scratch { position: absolute; width: 45px; height: 2px; background: #fff; box-shadow: 0 0 5px #fff; transform: rotate(40deg); top: 90px; left: 60px; } /* 刮痕瑕疵 */
+        .subj-semi .local-box { inset: 10px; border-radius: 50%; border-style: dashed; }
+        .subj-semi .local-marker { top: 76px; left: 52px; width: 60px; height: 30px; border-radius: 15px; transform: rotate(40deg); }
+
+        /* --- 3. 容器檢測 場景 --- */
+        .subj-bottle .bottle { width: 70px; height: 150px; background: rgba(56, 189, 248, 0.15); border: 3px solid rgba(56, 189, 248, 0.6); border-radius: 12px 12px 6px 6px; position: relative; margin-top: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .subj-bottle .cap { position: absolute; width: 44px; height: 16px; background: #ef4444; border-radius: 4px; top: -18px; left: 10px; transform: rotate(12deg); transform-origin: left bottom; } /* 瓶蓋歪斜瑕疵 */
+        .subj-bottle .liquid { position: absolute; bottom: 0; left: 0; right: 0; height: 45%; background: rgba(56, 189, 248, 0.4); border-radius: 0 0 4px 4px; }
+        .subj-bottle .liquid-line { position: absolute; top: 55%; width: 100%; border-top: 2px dashed #fcd34d; }
+        .subj-bottle .local-box { top: -30px; left: -15px; width: 100px; height: 60px; }
+        .subj-bottle .local-marker { top: -25px; left: 8px; width: 55px; height: 30px; border-radius: 6px; transform: rotate(8deg); }
+
+        /* --- 4. 車牌識別 場景 --- */
+        .subj-plate .plate { width: 85%; height: 65px; background: #f8fafc; border: 4px solid #1e293b; border-radius: 8px; display: flex; align-items: center; justify-content: space-evenly; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .subj-plate .char { font-size: 28px; font-weight: 800; color: #0f172a; font-family: 'Courier New', Courier, monospace; }
+        .subj-plate .blur { filter: blur(3px); color: #475569; } /* 模糊字元瑕疵 */
+        .subj-plate .local-box { inset: -12px; width: auto; height: auto; border-radius: 12px; }
+        .subj-plate .local-marker { right: 28%; top: 8px; width: 34px; height: 48px; border-radius: 6px; }
+
+        /* --- 5. 生物特徵 場景 --- */
+        .subj-bio .eye { width: 160px; height: 85px; border-radius: 50%; border: 4px solid #64748b; background: #0f172a; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.4); }
+        .subj-bio .iris { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, #000 20%, #0284c7 50%, #bae6fd 90%); position: relative; box-shadow: 0 0 10px rgba(2,132,199,0.5); }
+        .subj-bio .reflection { position: absolute; width: 10px; height: 10px; background: #fff; border-radius: 50%; top: 12px; right: 15px; box-shadow: 0 0 8px #fff; } /* 異常反光/偽造瑕疵 */
+        .subj-bio .local-box { width: 84px; height: 84px; border-radius: 50%; left: 34px; top: -4px; }
+        .subj-bio .local-marker { top: 4px; right: 8px; width: 24px; height: 24px; }
+
+        /* --- 6. 工業零件 場景 --- */
+        .subj-gear .gear { width: 130px; height: 130px; border-radius: 50%; background: linear-gradient(135deg, #94a3b8, #64748b); border: 10px dashed #334155; position: relative; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        .subj-gear .hole { width: 36px; height: 36px; border-radius: 50%; background: #0f172a; border: 2px solid #cbd5e1; transform: translate(10px, -8px); box-shadow: inset 0 0 10px rgba(0,0,0,0.8); } /* 孔位偏移瑕疵 */
+        .subj-gear .local-box { inset: -20px; width: auto; height: auto; border-radius: 50%; }
+        .subj-gear .local-marker { left: 52px; top: 32px; width: 50px; height: 50px; }
+
+        /* AOI Panel Styles */
+        .aoi-panel {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 22px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .object-selector {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .object-btn {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: left;
+            color: #fff;
+        }
+
+        .object-btn:hover,
+        .object-btn.active {
+            transform: translateY(-3px);
+            background: rgba(96,165,250,0.16);
+            border-color: rgba(147,197,253,0.45);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .info-card {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(15,23,42,0.46);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.95rem;
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .detection-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .detection-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #60a5fa;
+        }
+
+        .card-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .card-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .card-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #a78bfa;
+        }
+
+        /* Method Cards */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .method-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .method-card:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-5px);
+        }
+
+        .method-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #fbbf24;
+        }
+
+        .method-content {
+            line-height: 1.8;
+        }
+
+        .method-content strong {
+            color: #60a5fa;
+            display: block;
+            margin-top: 0.8rem;
+        }
+
+        /* Flowchart */
+        .flowchart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 3rem 0;
+        }
+
+        .flow-step {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-width: 200px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .flow-step:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .flow-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .flow-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: #fbbf24;
+        }
+
+        .flow-list {
+            list-style: none;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #60a5fa;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Analysis Section */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .analysis-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .analysis-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #a78bfa;
+        }
+
+        .quality-metric {
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .defect-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .defect-list li {
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid #ef4444;
+        }
+
+        /* Video Section */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .video-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .video-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem 0 1rem 0;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #ffffff;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+        }
+
+        .kuse-branding {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1.5rem 0;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .kuse-branding:hover {
+            opacity: 1;
+            color: #60a5fa;
+        }
+
+        .kuse-branding svg {
+            height: 1.2em;
+            transition: transform 0.3s ease;
+        }
+
+        .kuse-branding:hover svg {
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .page-header .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .card-grid, .method-grid, .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .aoi-lab,
+            .object-selector,
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flowchart {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="index.html" class="logo">機器視覺檢測</a>
+                <ul class="nav-links">
+                    <li><a href="index.html">首頁</a></li>
+                    <li><a href="intro.html">機器視覺簡介</a></li>
+                    <li><a href="imaging.html">取像模組</a></li>
+                    <li><a href="lighting.html">光源照明</a></li>
+                    <li><a href="processing.html">影像處理</a></li>
+                    <li><a href="application.html" class="active">檢測應用</a></li>
+                    <li><a href="project.html">專題報告</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h1>✅ 檢測應用</h1>
+            <p class="subtitle">Detection Applications</p>
+        </header>
+
+        <section class="section">
+            <h2 class="section-title">常見檢測物件與流程演示</h2>
+            <div class="aoi-lab mb-10">
+                <div class="aoi-stage" id="aoiStage">
+                    <div class="global-scanner" id="globalScanner">
+                        <div class="scanner-beam"></div>
+                    </div>
+                    
+                    <div class="inspection-board" id="inspectionBoard">
+                        <div class="aoi-subject subj-pcb" id="subj-PCB檢測">
+                            <div class="board">
+                                <div class="trace"></div>
+                                <div class="chip"></div>
+                                <div class="pad pad-1"></div>
+                                <div class="pad pad-2"></div>
+                                <div class="local-box"></div>
+                                <div class="local-marker"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="aoi-subject subj-semi" id="subj-半導體檢測">
+                            <div class="wafer">
+                                <div class="grid"></div>
+                                <div class="scratch"></div>
+                                <div class="local-box"></div>
+                                <div class="local-marker"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="aoi-subject subj-bottle" id="subj-容器檢測">
+                            <div class="bottle">
+                                <div class="cap"></div>
+                                <div class="liquid"></div>
+                                <div class="liquid-line"></div>
+                                <div class="local-box"></div>
+                                <div class="local-marker"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="aoi-subject subj-plate" id="subj-車牌識別">
+                            <div class="plate">
+                                <span class="char">A</span><span class="char">B</span><span class="char">-</span><span class="char">1</span><span class="char blur">2</span><span class="char">3</span>
+                                <div class="local-box"></div>
+                                <div class="local-marker"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="aoi-subject subj-bio" id="subj-生物特徵">
+                            <div class="eye">
+                                <div class="iris">
+                                    <div class="reflection"></div>
+                                </div>
+                                <div class="local-box"></div>
+                                <div class="local-marker"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="aoi-subject subj-gear" id="subj-工業零件">
+                            <div class="gear">
+                                <div class="hole"></div>
+                                <div class="local-box"></div>
+                                <div class="local-marker"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="aoi-panel" id="aoiInfoPanel">
+                    <div class="text-sm uppercase tracking-[0.3em] text-blue-200">AOI Application Demo</div>
+                    <h3 class="text-3xl font-bold text-white" id="aoiObjectTitle">PCB檢測</h3>
+                    <p class="text-slate-300" id="aoiObjectDescription">AOI 會先定位基準點，再檢查焊點形貌、元件偏移與線路斷短路等缺陷。</p>
+                    
+                    <div class="object-selector">
+                        <button class="object-btn active" data-object="PCB檢測">🔌 PCB檢測</button>
+                        <button class="object-btn" data-object="半導體檢測">💎 半導體檢測</button>
+                        <button class="object-btn" data-object="容器檢測">🥤 容器檢測</button>
+                        <button class="object-btn" data-object="車牌識別">🚗 車牌識別</button>
+                        <button class="object-btn" data-object="生物特徵">👤 生物特徵</button>
+                        <button class="object-btn" data-object="工業零件">⚙️ 工業零件</button>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-card"><strong class="block text-blue-200 mb-1">檢測重點</strong><span id="aoiFocus">焊點橋接、缺件、偏移、極性錯誤</span></div>
+                        <div class="info-card"><strong class="block text-blue-200 mb-1">成像方式</strong><span id="aoiImaging">高解析相機 + 環形光 / 同軸光</span></div>
+                        <div class="info-card"><strong class="block text-blue-200 mb-1">分析流程</strong><span id="aoiFlow">定位 → 切塊 → 比對模板 → 缺陷分類</span></div>
+                        <div class="info-card"><strong class="block text-blue-200 mb-1">動畫說明</strong><span id="aoiAnimation">綠框代表定位量測區，紅圈代表 AOI 發現的異常位置。</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-grid">
+                <div class="detection-card">
+                    <div class="card-icon">🔌</div>
+                    <h3 class="card-title">PCB檢測</h3>
+                    <ul class="card-list">
+                        <li>焊點檢測</li>
+                        <li>元件定位</li>
+                        <li>線路缺陷</li>
+                    </ul>
+                </div>
+
+                <div class="detection-card">
+                    <div class="card-icon">💎</div>
+                    <h3 class="card-title">半導體檢測</h3>
+                    <ul class="card-list">
+                        <li>晶圓檢測</li>
+                        <li>封裝檢測</li>
+                        <li>引腳檢測</li>
+                    </ul>
+                </div>
+
+                <div class="detection-card">
+                    <div class="card-icon">🥤</div>
+                    <h3 class="card-title">容器檢測</h3>
+                    <ul class="card-list">
+                        <li>瓶蓋檢測</li>
+                        <li>標籤檢測</li>
+                        <li>液位檢測</li>
+                    </ul>
+                </div>
+
+                <div class="detection-card">
+                    <div class="card-icon">🚗</div>
+                    <h3 class="card-title">車牌識別</h3>
+                    <ul class="card-list">
+                        <li>車牌定位</li>
+                        <li>字符識別</li>
+                        <li>違規檢測</li>
+                    </ul>
+                </div>
+
+                <div class="detection-card">
+                    <div class="card-icon">👤</div>
+                    <h3 class="card-title">生物特徵</h3>
+                    <ul class="card-list">
+                        <li>指紋識別</li>
+                        <li>人臉識別</li>
+                        <li>虹膜識別</li>
+                    </ul>
+                </div>
+
+                <div class="detection-card">
+                    <div class="card-icon">⚙️</div>
+                    <h3 class="card-title">工業零件</h3>
+                    <ul class="card-list">
+                        <li>尺寸測量</li>
+                        <li>表面檢測</li>
+                        <li>組裝驗證</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">主要檢測方法</h2>
+            <div class="method-grid">
+                <div class="method-card">
+                    <h3 class="method-title">模板匹配 (Template Matching)</h3>
+                    <div class="method-content">
+                        <strong>原理：</strong>將標準模板與待測影像比對<br>
+                        <strong>優點：</strong>簡單快速、適合固定形狀<br>
+                        <strong>缺點：</strong>對旋轉和縮放敏感<br>
+                        <strong>應用：</strong>定位、計數、簡單識別
+                    </div>
+                </div>
+
+                <div class="method-card">
+                    <h3 class="method-title">特徵提取 (Feature Extraction)</h3>
+                    <div class="method-content">
+                        <strong>原理：</strong>提取影像特徵進行分析<br>
+                        <strong>方法：</strong>邊緣、角點、紋理、顏色<br>
+                        <strong>優點：</strong>魯棒性高、適應性強<br>
+                        <strong>應用：</strong>複雜物體識別、分類
+                    </div>
+                </div>
+
+                <div class="method-card">
+                    <h3 class="method-title">機器學習方法</h3>
+                    <div class="method-content">
+                        <strong>方法：</strong><br>
+                        • SVM (支持向量機)<br>
+                        • 決策樹<br>
+                        • 隨機森林<br>
+                        <strong>優點：</strong>自動學習特徵<br>
+                        <strong>應用：</strong>分類、回歸、異常檢測
+                    </div>
+                </div>
+
+                <div class="method-card">
+                    <h3 class="method-title">深度學習方法 🧠</h3>
+                    <div class="method-content">
+                        <strong>方法：</strong><br>
+                        • CNN (卷積神經網路)<br>
+                        • YOLO (即時物件檢測)<br>
+                        • Mask R-CNN (實例分割)<br>
+                        <strong>優點：</strong>高準確率、端到端學習<br>
+                        <strong>應用：</strong>複雜場景檢測、語義分割
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">標準檢測流程</h2>
+            <div class="flowchart">
+                <div class="flow-step">
+                    <div class="flow-icon">📸</div>
+                    <h3 class="flow-title">影像擷取</h3>
+                    <ul class="flow-list">
+                        <li>相機拍攝</li>
+                        <li>照明控制</li>
+                        <li>影像獲取</li>
+                    </ul>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">🔧</div>
+                    <h3 class="flow-title">影像前處理</h3>
+                    <ul class="flow-list">
+                        <li>降噪處理</li>
+                        <li>對比度增強</li>
+                        <li>幾何校正</li>
+                    </ul>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">🔍</div>
+                    <h3 class="flow-title">特徵提取</h3>
+                    <ul class="flow-list">
+                        <li>邊緣檢測</li>
+                        <li>區域分割</li>
+                        <li>特徵計算</li>
+                    </ul>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">⚖️</div>
+                    <h3 class="flow-title">缺陷判定</h3>
+                    <ul class="flow-list">
+                        <li>特徵比對</li>
+                        <li>閾值判斷</li>
+                        <li>分類決策</li>
+                    </ul>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <div class="flow-icon">📊</div>
+                    <h3 class="flow-title">結果輸出</h3>
+                    <ul class="flow-list">
+                        <li>良品/不良品</li>
+                        <li>缺陷類型</li>
+                        <li>統計報告</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">檢測結果與品質指標</h2>
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <h3 class="analysis-title">良品/不良品判定</h3>
+                    <div class="method-content">
+                        <strong>OK：</strong>符合標準<br>
+                        <strong>NG：</strong>不符合標準<br>
+                        <strong>判定準則：</strong>尺寸、外觀、功能
+                    </div>
+                </div>
+
+                <div class="analysis-card">
+                    <h3 class="analysis-title">缺陷分類</h3>
+                    <ul class="defect-list">
+                        <li>尺寸超差</li>
+                        <li>表面瑕疵</li>
+                        <li>異物污染</li>
+                        <li>組裝錯誤</li>
+                        <li>缺件漏件</li>
+                    </ul>
+                </div>
+
+                <div class="analysis-card">
+                    <h3 class="analysis-title">品質指標</h3>
+                    <div class="quality-metric">
+                        <div class="metric-label">
+                            <span>準確率 (Accuracy)</span>
+                            <span>95%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 95%;"></div>
+                        </div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-label">
+                            <span>召回率 (Recall)</span>
+                            <span>92%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 92%;"></div>
+                        </div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-label">
+                            <span>精確率 (Precision)</span>
+                            <span>97%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 97%;"></div>
+                        </div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-label">
+                            <span>誤檢率 (False Positive)</span>
+                            <span>3%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 3%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+                        </div>
+                    </div>
+                    <div class="quality-metric">
+                        <div class="metric-label">
+                            <span>漏檢率 (False Negative)</span>
+                            <span>5%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 5%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-card">
+                    <h3 class="analysis-title">統計分析</h3>
+                    <div class="method-content">
+                        <strong>不良率趨勢</strong>
+                        持續監控生產過程中的不良品比例變化<br>
+                        <strong>缺陷類型分布</strong>
+                        分析各類缺陷的發生頻率與原因<br>
+                        <strong>生產效率</strong>
+                        評估檢測速度與產線配合度<br>
+                        <strong>報表生成</strong>
+                        自動產生品質報告與改善建議
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="index.html">首頁</a>
+                    <a href="introduction.html">機器視覺簡介</a>
+                    <a href="imaging.html">取像模組</a>
+                    <a href="lighting.html">光源照明</a>
+                    <a href="processing.html">影像處理</a>
+                    <a href="application.html">檢測應用</a>
+                    <a href="resources.html">課程資源</a>
+                </div>
+                <p>&copy; 2024 機器視覺檢測教學網站. All rights reserved.</p>
+            </div>
+            <a href="https://kuse.ai" target="_blank" class="kuse-branding">
+                <span>made with</span>
+                <svg viewBox="0,0,160,44" xmlns="http://www.w3.org/2000/svg"><path d="m.01,20.65C-.43,8.25,9.3-2.03,22.04.34,34.78,2.72,43.29,8.32,43.29,22.9s-8.66,19.01-22.03,20.3C7.9,44.5.46,33.05.01,20.65z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="m146.76,7.94c8.07,0,13.24,6.15,13.24,14.58v1.39h-20.75c.45,4.05,3.51,7.37,8.57,7.37,2.62,0,5.73-1.05,7.62-2.94l2.67,3.83c-2.67,2.55-6.62,3.88-10.9,3.88-8.07,0-14.08-5.6-14.08-14.08,0-7.76,5.67-14.02,13.63-14.02zm0,4.77c-5.01,0-7.29,3.83-7.57,7.1h15.13c-.11-3.16-2.28-7.1-7.57-7.1z" fill="currentColor"/><path d="m86.64,24.49c0,4.15,2.39,6.84,6.84,6.84,4.4,0,6.84-2.69,6.84-6.84V8.55h5.37v16.33c0,6.7-4.06,11.14-12.21,11.14-8.21,0-12.21-4.5-12.21-11.09V8.55h5.37v15.94zm32.99-16.55c4.49,0,8.06,1.47,10.6,3.86l-2.59,3.81c-2.05-2-5.28-3.08-8.06-3.08-2.88,0-4.84,1.37-4.84,3.32,0,1.91,2.64,2.54,5.81,3.27,4.59,1.08,10.26,2.4,10.26,8.46,0,4.94-3.76,8.41-11.14,8.41-4.98,0-8.94-1.76-11.24-4.11l2.54-4.11c1.86,1.91,5.18,3.67,8.84,3.67,3.91,0,5.57-1.66,5.57-3.62,0-2.3-2.88-2.98-6.21-3.76-4.54-1.08-9.87-2.3-9.87-8.06,0-4.5,4.2-8.06,10.31-8.06zM60.79,20.82,71.44,8.55h6.5L66.46,21.26,78.82,35.44h-6.5l-9.28-11.1-2.25,2.49v8.6h-5.33V8.55h5.33v12.27z" fill="currentColor"/></svg>
+            </a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+    <script>
+        // 定義每個檢測項目的資訊 (動畫座標已由 CSS 處理)
+        const aoiObjectData = {
+            'PCB檢測': {
+                description: 'AOI 會先定位基準點，再檢查焊點形貌、元件偏移與線路斷短路等缺陷。',
+                focus: '焊點橋接、缺件、偏移、極性錯誤',
+                imaging: '高解析相機 + 環形光 / 同軸光',
+                flow: '定位 → 切塊 → 比對模板 → 缺陷分類',
+                animation: '綠框定位 IC 晶片區塊，紅圈指出右下方焊點冷焊或缺件異常。'
+            },
+            '半導體檢測': {
+                description: '用高倍鏡頭與穩定照明檢查晶圓表面顆粒、封裝裂紋與引腳共面性。',
+                focus: '刮傷、崩角、封裝裂紋、引腳變形',
+                imaging: '遠心鏡頭 / 顯微鏡頭 + 暗視野 / 背光',
+                flow: '對焦校正 → 區域掃描 → 缺陷強化 → 等級判定',
+                animation: '綠框掃描晶圓整體，紅圈則精準標示出表面的物理刮痕。'
+            },
+            '容器檢測': {
+                description: '透過背光與側光同步觀察瓶蓋、液位、標籤位置與封口完整性。',
+                focus: '液位不足、標籤歪斜、瓶蓋未鎖緊',
+                imaging: '線掃或面陣相機 + 背光 + 側光',
+                flow: '輪廓擷取 → 液位線分析 → 標籤比對 → OK/NG 判定',
+                animation: '綠框對齊瓶口基準線，紅圈亮起警告瓶蓋旋轉角度異常 (未鎖緊)。'
+            },
+            '車牌識別': {
+                description: 'AOI / ANPR 先鎖定車牌區域，再進行字元分割與 OCR 辨識。',
+                focus: '車牌定位、字元清晰度、違規事件取證',
+                imaging: '高速相機 + 補光燈 + OCR 模型',
+                flow: '偵測車牌 → 透視校正 → 字元切分 → 辨識比對',
+                animation: '綠框框出車牌整體範圍，紅圈偵測並標記出模糊無法辨識的字元。'
+            },
+            '生物特徵': {
+                description: '透過影像品質評估與特徵點擷取，完成指紋、臉部或虹膜的辨識比對。',
+                focus: '關鍵點定位、紋理品質、活體偵測',
+                imaging: '近紅外 / 可見光相機 + 均勻照明',
+                flow: '影像增強 → 特徵點抽取 → 範本比對 → 身分驗證',
+                animation: '綠框定位虹膜主體區塊，紅圈偵測到異常的瞳孔反光 (可能為偽造攻擊)。'
+            },
+            '工業零件': {
+                description: '針對尺寸、孔位、倒角與表面瑕疵做全自動量測與分類，是典型的精密 AOI 任務。',
+                focus: '尺寸超差、孔位偏移、毛邊、組裝錯誤',
+                imaging: '遠心鏡頭 + 背光 / 斜射光',
+                flow: '邊緣量測 → 幾何比對 → 公差判定 → 缺陷回報',
+                animation: '綠框測量齒輪外徑，紅圈計算並警告內部孔位偏移出公差範圍。'
+            }
+        };
+
+        let currentAnim = null; // 用來儲存當前的 GSAP 時間軸
+
+        function updateAoiObject(name) {
+            const data = aoiObjectData[name];
+            if (!data) return;
+            
+            // 1. 更新文字內容
+            document.getElementById('aoiObjectTitle').textContent = name;
+            document.getElementById('aoiObjectDescription').textContent = data.description;
+            document.getElementById('aoiFocus').textContent = data.focus;
+            document.getElementById('aoiImaging').textContent = data.imaging;
+            document.getElementById('aoiFlow').textContent = data.flow;
+            document.getElementById('aoiAnimation').textContent = data.animation;
+            
+            // 2. 切換按鈕狀態
+            document.querySelectorAll('.object-btn').forEach((button) => {
+                button.classList.toggle('active', button.dataset.object === name);
+            });
+
+            // 3. 面板文字淡入動畫
+            gsap.fromTo('#aoiInfoPanel', { y: 10, opacity: 0.6 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' });
+
+            // 4. 切換對應的 CSS 場景
+            document.querySelectorAll('.aoi-subject').forEach(subj => subj.classList.remove('active'));
+            const activeSubj = document.getElementById(`subj-${name}`);
+            if (!activeSubj) return;
+            activeSubj.classList.add('active');
+
+            // 5. 執行 AOI 檢測流程動畫 (掃描 -> 定位 -> 抓瑕疵)
+            if (currentAnim) currentAnim.kill(); // 停止上一個動畫
+
+            const box = activeSubj.querySelector('.local-box');
+            const marker = activeSubj.querySelector('.local-marker');
+            const scanner = document.getElementById('globalScanner');
+
+            // 重置動畫元素狀態
+            gsap.set([box, marker], { opacity: 0, scale: 0.8 });
+            marker.classList.remove('active');
+            gsap.set(scanner, { top: '0%', opacity: 0 });
+
+            // 建立新的 GSAP 時間軸
+            currentAnim = gsap.timeline()
+                .to(scanner, { opacity: 1, duration: 0.2 })
+                .to(scanner, { top: '100%', duration: 1.5, ease: "power1.inOut" }) // 全域掃描往下
+                .to(scanner, { opacity: 0, duration: 0.2 })
+                .to(box, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.5)" }) // 綠框定位
+                .to(marker, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, "+=0.2") // 紅圈標記
+                .call(() => marker.classList.add('active')); // 加入無限閃爍效果
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 綁定點擊事件
+            document.querySelectorAll('.object-btn').forEach((button) => {
+                button.addEventListener('click', () => updateAoiObject(button.dataset.object));
+            });
+            
+            // 預設載入第一個項目
+            updateAoiObject('PCB檢測');
+
+            // 處理底部進度條動畫
+            const progressBars = document.querySelectorAll('.progress-fill');
+            const observerOptions = { threshold: 0.5, rootMargin: '0px' };
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.width = entry.target.getAttribute('data-width');
+                    }
+                });
+            }, observerOptions);
+
+            progressBars.forEach(bar => {
+                const targetWidth = bar.style.width;
+                bar.style.width = '0%';
+                bar.setAttribute('data-width', targetWidth);
+                observer.observe(bar);
+            });
+
+            // 卡片淡入特效
+            const cards = document.querySelectorAll('.detection-card, .method-card, .flow-step');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
